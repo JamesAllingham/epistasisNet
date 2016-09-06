@@ -3,8 +3,8 @@ from random import sample
 import math
 
 NUM_LOCI = 100
-NUM_SAMPLES = 800
-IN_FILE = 'basic_model_Models.txt_EDM-2/basic_model_Models.txt_EDM-2_001.txt'
+NUM_SAMPLES = 2000
+IN_FILE = 'simple_EDM-1/simple_EDM-1_1.txt'
 TEST_TRAIN_RATIO = 0.8
 
 labels = np.genfromtxt(IN_FILE, usecols=(NUM_LOCI), dtype='intc', skip_header=1, max_rows=NUM_SAMPLES)
