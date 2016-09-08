@@ -1,2 +1,4 @@
 *.jar
 MDR/*
+*.npy
+*.txt
