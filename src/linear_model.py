@@ -7,26 +7,22 @@ training_labels = np.load('../data/train_y.npy')
 test_data = np.load('../data/test_x.npy')
 test_labels = np.load('../data/test_y.npy')
 
-#training_data = tf.to_float(training_data)
-#training_labels = tf.to_float(training_labels)
+# get the data dimmensions
+num_rows_in, num_cols_in, num_states_in = training_data.shape
+num_rows_out, num_states_out = training_labels.shape
 
 #set session type
 sess = tf.InteractiveSession()
 
-#set up variable environment
-data_to_train = tf.constant(training_data, name='data_to_train')
-labels_to_train = tf.constant(training_labels, name='labels_to_train')
-
-
-x = tf.placeholder(tf.float32, [None, 10, 3]) #100 snps per person
-x_flat = tf.reshape(x, [-1, 10*3]) # flatten x
-W = tf.Variable(tf.zeros([30,2]))
-b = tf.Variable(tf.zeros([2]))
+x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in]) #100 snps per person
+x_flat = tf.reshape(x, [-1, num_cols_in*num_states_in]) # flatten x
+W = tf.Variable(tf.zeros([num_cols_in*num_states_in,num_states_out]))
+b = tf.Variable(tf.zeros([num_states_out]))
 y = tf.nn.softmax(tf.matmul(x_flat, W) + b)
 
 
 # Define loss and optimizer
-y_ = tf.placeholder(tf.float32, [None, 2])
+y_ = tf.placeholder(tf.float32, [None, num_states_out])
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
 train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
