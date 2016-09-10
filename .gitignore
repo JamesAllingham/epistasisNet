@@ -2,3 +2,4 @@
 MDR/*
 *.npy
 *.txt
+*.pyc
