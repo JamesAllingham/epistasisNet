@@ -19,7 +19,7 @@ def main(args):
 	for opt, arg in opts:                
 		if opt in ("-h", "--help"):      
 			print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                   
-			sys.exit()                  
+			sys.exit(2)                  
 		elif opt in ("-r", "--ratio"):                
 			test_train_ratio = float(arg)                
 		elif opt in ("-f", "--file"): 
@@ -27,15 +27,16 @@ def main(args):
 			file_arg_given = True   
 	if not file_arg_given:
 		print("Please specify the input file using the '-f' flag.")
-		sys.exit()
+		sys.exit(2)
 
 	# Read the data file, and get the numer of rows and collumns
 	data = np.genfromtxt(input_file, dtype='intc', skip_header=1)
-	num_samples, num_loci = data.shape
+	num_samples, num_rows = data.shape
+	num_loci = num_rows - 1
 
 	# Split into the inputs and outputs
-	x = data[:,0:(num_loci-1)]
-	y = data[:,num_loci-1]
+	x = data[:,0:(num_loci)]
+	y = data[:,num_loci]
 
 	# We want the data to be in a 1-hot format indicating whether the SNP is double major, major-minor, or double minor
 	# To do this we iterate through the data and for each element, we create a new 1-hot array
