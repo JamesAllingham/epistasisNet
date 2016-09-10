@@ -10,7 +10,7 @@ def main(args):
 
 	# Try get user input             
 	try:                                
-		opts, args = getopt.getopt(args, "f:r:g", ["file=", "ratio=", "help"]) 
+		opts, args = getopt.getopt(args, "f:r:h", ["file=", "ratio=", "help"]) 
 	except getopt.GetoptError:           
 		print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                         
 		sys.exit(2) 
