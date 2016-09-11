@@ -2,6 +2,10 @@ import tensorflow as tf
 import numpy as np
 import data_holder
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 #load input data
 dh = data_holder.DataHolder('../data/medium_EDM-1/medium_EDM-1_1.txt', 0.2, 0.75)
 
