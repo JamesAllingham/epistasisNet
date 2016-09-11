@@ -3,10 +3,9 @@ import numpy as np
 
 class DataBatcher:
 
-    def __init__(self, path_to_data, data_x_filename, data_y_filename):
-        FILE_TYPE = ".npy"
-        self.__x = np.load(path_to_data + data_x_filename + FILE_TYPE)
-        self.__y = np.load(path_to_data + data_y_filename + FILE_TYPE)
+    def __init__(self, x, y):
+        self.__x = x
+        self.__y = y
         self.__batch_cursor = 0
         self.__data_size = self.__x.shape[0]
 
@@ -41,22 +40,3 @@ class DataBatcher:
 
     def get_output_shape(self):
         return self.__y.shape
-
-
-class DataHolder:
-    
-    def __init__(self):
-        self.train = DataBatcher("../data/", "train_x", "train_y")
-        self.test = DataBatcher("../data/", "test_x", "test_y")
-        self.valid = None
-
-def main():
-    dh = DataHolder()
-    for i in range(1000):
-        batch_xs = dh.train.next_batch(100)
-        batch_ys = dh.train.next_batch(100)
-        print(i)    
-
-# Testing 
-if __name__ == "__main__":
-	main()
