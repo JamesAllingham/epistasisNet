@@ -1,17 +1,13 @@
 import tensorflow as tf
 import numpy as np
-import data_batcher
+import data_holder
 
 #load input data
-# training_data = np.load('../data/train_x.npy')
-# training_labels = np.load('../data/train_y.npy')
-# test_data = np.load('../data/test_x.npy')
-# test_labels = np.load('../data/test_y.npy')
-dh = data_batcher.DataHolder()
+dh = data_holder.DataHolder('../data/small_EDM-1/small_EDM-1_1.txt')
 
 # get the data dimmensions
-num_rows_in, num_cols_in, num_states_in = dh.train.get_input_shape()
-num_rows_out, num_states_out = dh.train.get_output_shape()
+num_rows_in, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
+num_rows_out, num_states_out = dh.get_training_data().get_output_shape()
 
 #set session type
 sess = tf.InteractiveSession()
@@ -31,19 +27,18 @@ train_step = tf.train.GradientDescentOptimizer(0.9).minimize(cross_entropy)
 # Train
 tf.initialize_all_variables().run()
 
-for i in range(10000):
-  batch_xs, batch_ys = dh.train.next_batch(1)
+for i in range(2001):
+  batch_xs, batch_ys = dh.get_training_data().next_batch(50)
   train_step.run({x: batch_xs, y_: batch_ys})
-  print('Batch %i complete' % (i + 1,))
+  if i % 100 == 0:
+    print('Batch %i complete' % (i + 1,))
 
-
-# train_step.run({x: training_data, y_: training_labels})
 print('Training Complete')
 
 # Test trained model
 correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-test_xs, test_ys = dh.test.next_batch(1000)
+test_xs, test_ys = dh.get_testing_data().next_batch(1000)
 print(accuracy.eval({x: test_xs, y_: test_ys}))
 
 # need to test different optimisers and different training rates
