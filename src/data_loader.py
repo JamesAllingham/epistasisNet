@@ -45,11 +45,13 @@ class DataLoader:
         self.__testing_y = self.__y_1_hot[training_indices]
 
         validation_indices = [elem for elem in not_testing_indices if elem not in training_indices]
+        shuffle(validation_indices)
         self.__validation_x = self.__x_1_hot[validation_indices]
         self.__validation_y = self.__y_1_hot[validation_indices]
 
         # All of the other indices are to become the testing set
         testing_indices = [elem for elem in range(self.__num_samples) if elem not in not_testing_indices]
+        shuffle(testing_indices)
         self.__training_x = self.__x_1_hot[testing_indices]
         self.__training_y = self.__y_1_hot[testing_indices]
 
