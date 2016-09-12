@@ -5,6 +5,8 @@ from __future__ import print_function
 import tensorflow as tf
 
 import data_holder
+import sys
+import getopt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -15,9 +17,9 @@ flags.DEFINE_string('data_dir', '/tmp/data', 'Directory for storing data')
 flags.DEFINE_string('summaries_dir', '/tmp/logs', 'Summaries directory')
 
 
-def train():
+def train(file_name_and_path, test_train_ratio):
   # Import data
-  dh = data_holder.DataHolder('../data/medium_EDM-1/medium_EDM-1_1.txt', 0.2, 0.75)
+  dh = data_holder.DataHolder(file_name_and_path, test_train_ratio, 1)
 
   # get the data dimmensions
   num_rows_in, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
@@ -153,11 +155,33 @@ def train():
   test_writer.close()
 
 
-def main(_):
+def main(args):
+  # Try get user input        
+  try:                                
+    opts, args = getopt.getopt(args[1:], "f:r:h", ["file=", "help"]) 
+  except getopt.GetoptError:           
+    print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                         
+    sys.exit(2) 
+
+  test_train_ratio = 0.2
+  file_arg_given = False
+  for opt, arg in opts:                
+    if opt in ("-h", "--help"):      
+      print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                   
+      sys.exit(2)                     
+    elif opt in ("-f", "--file"): 
+      input_file = arg
+      file_arg_given = True  
+    elif opt in ("-r", "--ratio"):                
+			test_train_ratio = float(arg)     
+    if not file_arg_given:
+      print("Please specify the input file using the '-f' flag.")
+      sys.exit(2)
+
   if tf.gfile.Exists(FLAGS.summaries_dir):
     tf.gfile.DeleteRecursively(FLAGS.summaries_dir)
   tf.gfile.MakeDirs(FLAGS.summaries_dir)
-  train()
+  train(input_file, test_train_ratio)
 
 
 if __name__ == '__main__':
