@@ -10,14 +10,14 @@ import getopt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
+
 flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout.')
 flags.DEFINE_string('data_dir', '/tmp/data', 'Directory for storing data')
-flags.DEFINE_string('summaries_dir', '/tmp/logs', 'Summaries directory')
 
+def train(file_name_and_path, test_train_ratio, log_file_path):
 
-def train(file_name_and_path, test_train_ratio):
   # Import data
   dh = data_holder.DataHolder(file_name_and_path, test_train_ratio, 1)
 
@@ -89,7 +89,7 @@ def train(file_name_and_path, test_train_ratio):
     tf.scalar_summary('dropout_keep_probability', keep_prob)
     dropped = tf.nn.dropout(hidden1, keep_prob)
 
-  #y = nn_layer(dropped, 500, num_states_out, 'layer2', act=tf.nn.softmax)
+  # y = nn_layer(dropped, 500, num_states_out, 'layer2', act=tf.nn.softmax)
   W_1 = tf.Variable(tf.truncated_normal([num_cols_in*num_states_in,num_states_out], 0.1))
   b_1 = tf.Variable(tf.truncated_normal([num_states_out],0.1))
   y = tf.nn.softmax(tf.matmul(x_flat, W_1) + b_1)
@@ -113,9 +113,9 @@ def train(file_name_and_path, test_train_ratio):
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
-  train_writer = tf.train.SummaryWriter(FLAGS.summaries_dir + '/train',
+  train_writer = tf.train.SummaryWriter(log_file_path + '/train',
                                         sess.graph)
-  test_writer = tf.train.SummaryWriter(FLAGS.summaries_dir + '/test')
+  test_writer = tf.train.SummaryWriter(log_file_path + '/test')
   tf.initialize_all_variables().run()
 
   # Train the model, and also write summaries.
@@ -158,12 +158,13 @@ def train(file_name_and_path, test_train_ratio):
 def main(args):
   # Try get user input        
   try:                                
-    opts, args = getopt.getopt(args[1:], "f:r:h", ["file=", "help"]) 
+    opts, args = getopt.getopt(args[1:], "f:r:hl:", ["file=", 'ratio=', "help", 'logfile=']) 
   except getopt.GetoptError:           
     print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                         
     sys.exit(2) 
 
   test_train_ratio = 0.2
+  log_file_path = '/tmp/logs/'
   file_arg_given = False
   for opt, arg in opts:                
     if opt in ("-h", "--help"):      
@@ -173,15 +174,17 @@ def main(args):
       input_file = arg
       file_arg_given = True  
     elif opt in ("-r", "--ratio"):                
-			test_train_ratio = float(arg)     
-    if not file_arg_given:
-      print("Please specify the input file using the '-f' flag.")
-      sys.exit(2)
+			test_train_ratio = float(arg)   
+    elif opt in ("-l", "--logfile"):
+      log_file_path = arg
+  if not file_arg_given:
+    print("Please specify the input file using the '-f' flag.")
+    sys.exit(2)
 
-  if tf.gfile.Exists(FLAGS.summaries_dir):
-    tf.gfile.DeleteRecursively(FLAGS.summaries_dir)
-  tf.gfile.MakeDirs(FLAGS.summaries_dir)
-  train(input_file, test_train_ratio)
+  if tf.gfile.Exists(log_file_path):
+    tf.gfile.DeleteRecursively(log_file_path)
+  tf.gfile.MakeDirs(log_file_path)
+  train(input_file, test_train_ratio, log_file_path)
 
 
 if __name__ == '__main__':
