@@ -3,7 +3,7 @@ import data_loader
 
 class DataHolder:
     
-    def __init__(self, file_name_and_path, test_train_ratio=0.2, train_valid_ratio=0.75):
+    def __init__(self, file_name_and_path, test_train_ratio=0.8, train_valid_ratio=0.75):
         self.__data_loader = data_loader.DataLoader(file_name_and_path, test_train_ratio, train_valid_ratio)
         self.__data_loader.convert_data_to_1_hot()
         self.__data_loader.split_data()
