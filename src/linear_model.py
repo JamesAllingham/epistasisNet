@@ -18,6 +18,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
   num_rows_in, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
   num_rows_out, num_states_out = dh.get_training_data().get_output_shape()
 
+  tf.set_random_seed(42)
   sess = tf.InteractiveSession()
 
   # Create a multilayer model.
