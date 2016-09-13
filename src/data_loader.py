@@ -41,8 +41,8 @@ class DataLoader:
         # Now split those indices into training and validation
         training_indices = sample(not_testing_indices, int(math.ceil(self.__train_valid_ratio*len(not_testing_indices))))
         shuffle(training_indices) # does this actually do anything?
-        self.__testing_x = self.__x_1_hot[training_indices]
-        self.__testing_y = self.__y_1_hot[training_indices]
+        self.__training_x = self.__x_1_hot[training_indices]
+        self.__training_y = self.__y_1_hot[training_indices]
 
         validation_indices = [elem for elem in not_testing_indices if elem not in training_indices]
         shuffle(validation_indices)
@@ -52,8 +52,8 @@ class DataLoader:
         # All of the other indices are to become the testing set
         testing_indices = [elem for elem in range(self.__num_samples) if elem not in not_testing_indices]
         shuffle(testing_indices)
-        self.__training_x = self.__x_1_hot[testing_indices]
-        self.__training_y = self.__y_1_hot[testing_indices]
+        self.__testing_x = self.__x_1_hot[testing_indices]
+        self.__testing_y = self.__y_1_hot[testing_indices]
 
         # Because we are sampling randomly, for large data sets, the ratio of case and controls in the data should remain 50% in both sets
         print "The number of training samples is %i with %i cases (%d percent)"%(len(self.__training_y), sum(self.__training_y[:,1]), np.mean(self.__training_y[:,1])*100)
