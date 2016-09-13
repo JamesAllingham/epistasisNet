@@ -7,14 +7,7 @@ import tensorflow as tf
 import data_holder
 import sys
 import getopt
-
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-
-flags.DEFINE_integer('max_steps', 1000, 'Number of steps to run trainer.')
-flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
-flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout.')
-flags.DEFINE_string('data_dir', '/tmp/data', 'Directory for storing data')
+import utilities
 
 def train(file_name_and_path, test_train_ratio, log_file_path):
 
@@ -35,15 +28,15 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
     y_ = tf.placeholder(tf.float32, [None, num_states_out], name='y-input')
 
   # We can't initialize these variables to 0 - the network will get stuck.
-  def weight_variable(shape):
-    """Create a weight variable with appropriate initialization."""
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
+  # def weight_variable(shape):
+  #   """Create a weight variable with appropriate initialization."""
+  #   initial = tf.truncated_normal(shape, stddev=0.1)
+  #   return tf.Variable(initial)
 
-  def bias_variable(shape):
-    """Create a bias variable with appropriate initialization."""
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
+  # def bias_variable(shape):
+  #   """Create a bias variable with appropriate initialization."""
+  #   initial = tf.constant(0.1, shape=shape)
+  #   return tf.Variable(initial)
 
   def variable_summaries(var, name):
     """Attach a lot of summaries to a Tensor."""
@@ -67,10 +60,10 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
     with tf.name_scope(layer_name):
       # This Variable will hold the state of the weights for the layer
       with tf.name_scope('weights'):
-        weights = weight_variable([input_dim, output_dim])
+        weights = utilities.tn_weight_variable([input_dim, output_dim], 0.1)
         variable_summaries(weights, layer_name + '/weights')
       with tf.name_scope('biases'):
-        biases = bias_variable([output_dim])
+        biases = utilities.bias_variable([output_dim])
         variable_summaries(biases, layer_name + '/biases')
       with tf.name_scope('Wx_plus_b'):
         preactivate = tf.matmul(input_tensor, weights) + biases
@@ -79,37 +72,25 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
       tf.histogram_summary(layer_name + '/activations', activations)
       return activations
   
-  with tf.name_scope('reshape'):
-    x_flat = tf.reshape(x, [-1, num_cols_in*num_states_in])
+  x_flat = utilities.reshape(x, num_cols_in * num_states_in, 1)
 
   hidden1 = nn_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1')
 
-  with tf.name_scope('dropout'):
-    keep_prob = tf.placeholder(tf.float32)
-    tf.scalar_summary('dropout_keep_probability', keep_prob)
-    dropped = tf.nn.dropout(hidden1, keep_prob)
+  dropped, keep_prob = utilities.dropout(hidden1)
 
-  # y = nn_layer(dropped, 500, num_states_out, 'layer2', act=tf.nn.softmax)
-  W_1 = tf.Variable(tf.truncated_normal([num_cols_in*num_states_in,num_states_out], 0.1))
-  b_1 = tf.Variable(tf.truncated_normal([num_states_out],0.1))
-  y = tf.nn.softmax(tf.matmul(x_flat, W_1) + b_1)
+  y = nn_layer(dropped, 500, num_states_out, 'layer2', act=tf.nn.softmax)
+  # W_1 = tf.Variable(tf.truncated_normal([num_cols_in*num_states_in,num_states_out], 0.1))
+  # b_1 = tf.Variable(tf.truncated_normal([num_states_out],0.1))
+  # y = tf.nn.softmax(tf.matmul(x_flat, W_1) + b_1)
 
-  with tf.name_scope('cross_entropy'):
-    diff = y_ * tf.log(y)
-    with tf.name_scope('total'):
-      cross_entropy = -tf.reduce_mean(diff)
-    tf.scalar_summary('cross entropy', cross_entropy)
+  loss = utilities.calculate_cross_entropy(y, y_)
 
-  with tf.name_scope('train'):
-    train_step = tf.train.AdamOptimizer(FLAGS.learning_rate).minimize(
-        cross_entropy)
+  train_step = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss)
+  # with tf.name_scope('train'):
+  #   train_step = tf.train.AdamOptimizer(learning_rate).minimize(
+  #       loss)
 
-  with tf.name_scope('accuracy'):
-    with tf.name_scope('correct_prediction'):
-      correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    with tf.name_scope('accuracy'):
-      accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.scalar_summary('accuracy', accuracy)
+  accuracy = utilities.calculate_accuracy(y, y_)
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
@@ -126,13 +107,13 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
     """Make a TensorFlow feed_dict: maps data onto Tensor placeholders."""
     if train:
       xs, ys = dh.get_training_data().next_batch(100)
-      k = FLAGS.dropout
+      k = dropout_rate
     else:
       xs, ys = dh.get_testing_data().next_batch(1000)
       k = 1.0
     return {x: xs, y_: ys, keep_prob: k}
 
-  for i in range(FLAGS.max_steps):
+  for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
       summary, acc = sess.run([merged, accuracy], feed_dict=feed_dict(False))
       test_writer.add_summary(summary, i)
@@ -156,30 +137,8 @@ def train(file_name_and_path, test_train_ratio, log_file_path):
 
 
 def main(args):
-  # Try get user input        
-  try:                                
-    opts, args = getopt.getopt(args[1:], "f:r:hl:", ["file=", 'ratio=', "help", 'logfile=']) 
-  except getopt.GetoptError:           
-    print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                         
-    sys.exit(2) 
-
-  test_train_ratio = 0.2
-  log_file_path = '/tmp/logs/'
-  file_arg_given = False
-  for opt, arg in opts:                
-    if opt in ("-h", "--help"):      
-      print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                   
-      sys.exit(2)                     
-    elif opt in ("-f", "--file"): 
-      input_file = arg
-      file_arg_given = True  
-    elif opt in ("-r", "--ratio"):                
-			test_train_ratio = float(arg)   
-    elif opt in ("-l", "--logfile"):
-      log_file_path += arg
-  if not file_arg_given:
-    print("Please specify the input file using the '-f' flag.")
-    sys.exit(2)
+  # Try get user input   
+  input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate = utilities.get_command_line_input(args)
 
   if tf.gfile.Exists(log_file_path):
     tf.gfile.DeleteRecursively(log_file_path)
