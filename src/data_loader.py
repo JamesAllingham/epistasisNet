@@ -1,5 +1,5 @@
 import numpy as np
-from random import sample, shuffle
+from random import sample, shuffle, seed
 import math
 
 class DataLoader:
@@ -35,6 +35,7 @@ class DataLoader:
                 self.__y_1_hot[i][1] = int(cell == 1)
 
     def split_data(self):
+        seed(42)
         # We now want to split the data into training, validation and testing sets
         # We randomly choose a number of indices in the data that will be used for training/ validation
         not_testing_indices = sample(range(self.__num_samples), int(math.ceil(self.__test_train_ratio*self.__num_samples)))
