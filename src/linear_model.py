@@ -176,7 +176,7 @@ def main(args):
     elif opt in ("-r", "--ratio"):                
 			test_train_ratio = float(arg)   
     elif opt in ("-l", "--logfile"):
-      log_file_path = arg
+      log_file_path += arg
   if not file_arg_given:
     print("Please specify the input file using the '-f' flag.")
     sys.exit(2)
