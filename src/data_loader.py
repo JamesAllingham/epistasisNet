@@ -57,11 +57,11 @@ class DataLoader:
         self.__testing_y = self.__y_1_hot[testing_indices]
 
         # Because we are sampling randomly, for large data sets, the ratio of case and controls in the data should remain 50% in both sets
-        print "The number of training samples is %i with %i cases (%d percent)"%(len(self.__training_y), sum(self.__training_y[:,1]), np.mean(self.__training_y[:,1])*100)
+        print("The number of training samples is %i with %i cases (%d percent)"%(len(self.__training_y), sum(self.__training_y[:,1]), np.mean(self.__training_y[:,1])*100))
         if testing_indices:
-            print "The number of testing samples is %i with %i cases (%d percent)"%(len(self.__testing_y), sum(self.__testing_y[:,1]), np.mean(self.__testing_y[:,1])*100)
+            print("The number of testing samples is %i with %i cases (%d percent)"%(len(self.__testing_y), sum(self.__testing_y[:,1]), np.mean(self.__testing_y[:,1])*100))
         if validation_indices:
-            print "The number of validation samples is %i with %i cases (%d percent)"%(len(self.__validation_y), sum(self.__validation_y[:,1]), np.mean(self.__validation_y[:,1])*100)
+            print("The number of validation samples is %i with %i cases (%d percent)"%(len(self.__validation_y), sum(self.__validation_y[:,1]), np.mean(self.__validation_y[:,1])*100))
 
     def get_testing_data(self):
         return (self.__testing_x, self.__testing_y)
