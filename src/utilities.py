@@ -41,11 +41,11 @@ def get_command_line_input(args):
     elif opt in ("-l", "--logfile"):
       log_file_path += arg
     elif opt in ("-s", "--maxsteps"):
-      max_steps = arg
+      max_steps = int(arg)
     elif opt in ("-t", "--learningrate"):
-      learning_rate = arg
+      learning_rate = float(arg)
     elif opt in ("-d", "--dropoutrate="):
-      dropout_rate = arg
+      dropout_rate = float(arg)
   if not file_arg_given:
     print("Please specify the input file using the '-f' flag.")
     sys.exit(2)
