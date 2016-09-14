@@ -9,7 +9,7 @@ import sys
 import getopt
 import utilities
 
-def train(file_name_and_path, test_train_ratio, log_file_path):
+def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate):
 
   # Import data
   dh = data_holder.DataHolder(file_name_and_path, test_train_ratio, 1)
@@ -144,7 +144,7 @@ def main(args):
   if tf.gfile.Exists(log_file_path):
     tf.gfile.DeleteRecursively(log_file_path)
   tf.gfile.MakeDirs(log_file_path)
-  train(input_file, test_train_ratio, log_file_path)
+  train(input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate)
 
 
 if __name__ == '__main__':
