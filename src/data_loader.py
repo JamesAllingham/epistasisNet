@@ -16,7 +16,18 @@ class DataLoader:
 
         # Split into the inputs and outputs
         self.__x = data[:,0:(self.__num_loci)]
-        self.__y = data[:,self.__num_loci]
+        self.__y_1 = data[:,self.__num_loci]
+
+        # Generate the secondary output
+        with open(file_name_and_path, 'r') as f:
+            header = f.readline().strip()
+            headers = header.split("\t")
+            self.__y_2 = np.zeros(data.shape)
+            for (i,row) in enumerate(self.__y_2):
+                for (j,cell) in enumerate(row):
+                    if self.__y_1[i] == 1 and headers[j][0] == 'M':
+                        self.__y_2[i][j] = 1
+
 
     def convert_data_to_1_hot(self):        
         # We want the data to be in a 1-hot format indicating whether the SNP is double major, major-minor, or double minor
@@ -28,11 +39,18 @@ class DataLoader:
                 self.__x_1_hot[i][j][1] = int(cell == 1)
                 self.__x_1_hot[i][j][2] = int(cell == 2)
 
-        #Labels need to also be 1-hot with index 0 is control and index 1 is case
-        self.__y_1_hot = np.zeros((self.__num_samples, 2))
-        for (i,cell) in enumerate(self.__y):
-                self.__y_1_hot[i][0] = int(cell == 0)
-                self.__y_1_hot[i][1] = int(cell == 1)
+        # Labels need to also be 1-hot with index 0 is control and index 1 is case
+        self.__y_1_hot_1 = np.zeros((self.__num_samples, 2))
+        for (i,cell) in enumerate(self.__y_1):
+            self.__y_1_hot_1[i][0] = int(cell == 0)
+            self.__y_1_hot_1[i][1] = int(cell == 1)
+
+        # Make the secondary output also 1 hot
+        self.__y_1_hot_2 = np.zeros([self.__y_2.shape[0], self.__y_2.shape[1], 2])
+        for (i, row) in enumerate(self.__y_2):
+            for (j, cell) in enumerate(row):
+                self.__y_1_hot_2[i][j][0] = int(cell == 0)
+                self.__y_1_hot_2[i][j][1] = int(cell == 1)
 
     def split_data(self):
         seed(42)
@@ -43,37 +61,40 @@ class DataLoader:
         training_indices = sample(not_testing_indices, int(math.ceil(self.__train_valid_ratio*len(not_testing_indices))))
         shuffle(training_indices) # does this actually do anything?
         self.__training_x = self.__x_1_hot[training_indices]
-        self.__training_y = self.__y_1_hot[training_indices]
+        self.__training_y_1 = self.__y_1_hot_1[training_indices]
+        self.__training_y_2 = self.__y_1_hot_2[training_indices]
 
         validation_indices = [elem for elem in not_testing_indices if elem not in training_indices]
         shuffle(validation_indices)
         self.__validation_x = self.__x_1_hot[validation_indices]
-        self.__validation_y = self.__y_1_hot[validation_indices]
+        self.__validation_y_1 = self.__y_1_hot_1[validation_indices]
+        self.__validation_y_2 = self.__y_1_hot_2[validation_indices]
 
         # All of the other indices are to become the testing set
         testing_indices = [elem for elem in range(self.__num_samples) if elem not in not_testing_indices]
         shuffle(testing_indices)
         self.__testing_x = self.__x_1_hot[testing_indices]
-        self.__testing_y = self.__y_1_hot[testing_indices]
+        self.__testing_y_1 = self.__y_1_hot_1[testing_indices]
+        self.__testing_y_2 = self.__y_1_hot_2[testing_indices]
 
         # Because we are sampling randomly, for large data sets, the ratio of case and controls in the data should remain 50% in both sets
-        print("The number of training samples is %i with %i cases (%d percent)"%(len(self.__training_y), sum(self.__training_y[:,1]), np.mean(self.__training_y[:,1])*100))
+        print("The number of training samples is %i with %i cases (%d percent)"%(len(self.__training_y_1), sum(self.__training_y_1[:,1]), np.mean(self.__training_y_1[:,1])*100))
         if testing_indices:
-            print("The number of testing samples is %i with %i cases (%d percent)"%(len(self.__testing_y), sum(self.__testing_y[:,1]), np.mean(self.__testing_y[:,1])*100))
+            print("The number of testing samples is %i with %i cases (%d percent)"%(len(self.__testing_y_1), sum(self.__testing_y_1[:,1]), np.mean(self.__testing_y_1[:,1])*100))
         if validation_indices:
-            print("The number of validation samples is %i with %i cases (%d percent)"%(len(self.__validation_y), sum(self.__validation_y[:,1]), np.mean(self.__validation_y[:,1])*100))
+            print("The number of validation samples is %i with %i cases (%d percent)"%(len(self.__validation_y_1), sum(self.__validation_y_1[:,1]), np.mean(self.__validation_y_1[:,1])*100))
 
     def get_testing_data(self):
-        return (self.__testing_x, self.__testing_y)
+        return (self.__testing_x, self.__testing_y_1, self.__testing_y_2)
 
     def get_training_data(self):
-        return (self.__training_x, self.__training_y)
+        return (self.__training_x, self.__training_y_1, self.__training_y_2)
     
     def get_validation_data(self):
-        return (self.__validation_x, self.__validation_y)
+        return (self.__validation_x, self.__validation_y_1, self.__validation_y_2)
 
     def get_1_hot_data(self):
-        return (self.__x_1_hot, self.__y_1_hot)
+        return (self.__x_1_hot, self.__y_1_hot_1, self.__y_1_hot_2)
 
     def get_data(self):
-        return (self.__x, self.__y)
+        return (self.__x, self.__y_1, self.__y_2)
