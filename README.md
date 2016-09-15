@@ -6,7 +6,7 @@ epistasisNet
 ELEN4002/4012 Project by James Allingham and Paul Cresswell. Supervised by Prof. Scott Hazelhurst.
 
 # Prerequisites:
-* Python 2.7
+* Python 3.5
 * Numpy
 * Tensorflow
 
