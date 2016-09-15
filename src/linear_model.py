@@ -1,12 +1,8 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import tensorflow as tf
-
-import data_holder
 import sys
 import getopt
+
+import data_holder
 import utilities
 
 def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate):
@@ -16,28 +12,17 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
 
   # get the data dimmensions
   num_rows_in, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
-  num_rows_out, num_states_out = dh.get_training_data().get_output_shape()
+  num_rows_out1, num_states_out1 = dh.get_training_data().get_output1_shape()
+  num_rows_out2, num_cols_out2, num_states_out2 = dh.get_training_data().get_output2_shape()
 
   tf.set_random_seed(42)
   sess = tf.InteractiveSession()
 
-  # Create a multilayer model.
-
   # Input placeholders
   with tf.name_scope('input'):
     x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in], name='x-input')
-    y_ = tf.placeholder(tf.float32, [None, num_states_out], name='y-input')
-
-  # We can't initialize these variables to 0 - the network will get stuck.
-  # def weight_variable(shape):
-  #   """Create a weight variable with appropriate initialization."""
-  #   initial = tf.truncated_normal(shape, stddev=0.1)
-  #   return tf.Variable(initial)
-
-  # def bias_variable(shape):
-  #   """Create a bias variable with appropriate initialization."""
-  #   initial = tf.constant(0.1, shape=shape)
-  #   return tf.Variable(initial)
+    y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
+    y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
 
   def variable_summaries(var, name):
     """Attach a lot of summaries to a Tensor."""
@@ -79,19 +64,17 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
 
   dropped, keep_prob = utilities.dropout(hidden1)
 
-  y = nn_layer(dropped, 500, num_states_out, 'layer2', act=tf.nn.softmax)
-  # W_1 = tf.Variable(tf.truncated_normal([num_cols_in*num_states_in,num_states_out], 0.1))
-  # b_1 = tf.Variable(tf.truncated_normal([num_states_out],0.1))
-  # y = tf.nn.softmax(tf.matmul(x_flat, W_1) + b_1)
+  y1 = nn_layer(dropped, 500, num_states_out1, 'layer2_1', act=tf.nn.softmax)
+  y2 = utilities.reshape(nn_layer(dropped, 500, num_states_out2*num_cols_out2, 'layer2_2', act=tf.nn.softmax), num_cols_out2, num_states_out2)
 
-  loss = utilities.calculate_cross_entropy(y, y_)
+  loss1 = utilities.calculate_cross_entropy(y1, y1_, '1')
+  loss2 = utilities.calculate_cross_entropy(y2, y2_, '2')
 
-  train_step = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss)
-  # with tf.name_scope('train'):
-  #   train_step = tf.train.AdamOptimizer(learning_rate).minimize(
-  #       loss)
+  train_step1 = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss1)
+  train_step2 = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss2)
 
-  accuracy = utilities.calculate_accuracy(y, y_)
+  accuracy1 = utilities.calculate_accuracy(y1, y1_, '1')
+  accuracy2 = utilities.calculate_accuracy(y2, y2_, '2')
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
@@ -107,23 +90,24 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
   def feed_dict(train):
     """Make a TensorFlow feed_dict: maps data onto Tensor placeholders."""
     if train:
-      xs, ys = dh.get_training_data().next_batch(100)
+      xs, y1s, y2s = dh.get_training_data().next_batch(100)
       k = dropout_rate
     else:
-      xs, ys = dh.get_testing_data().next_batch(1000)
+      xs, y1s, y2s = dh.get_testing_data().next_batch(1000)
       k = 1.0
-    return {x: xs, y_: ys, keep_prob: k}
+    return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
   for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc = sess.run([merged, accuracy], feed_dict=feed_dict(False))
+      summary, acc1, acc2 = sess.run([merged, accuracy1, accuracy2], feed_dict=feed_dict(False))
       test_writer.add_summary(summary, i)
-      print('Accuracy at step %s: %s' % (i, acc))
+      print('Accuracy at step %s for output 1: %s' % (i, acc1))
+      print('Accuracy at step %s for output 2: %s' % (i, acc2))
     else:  # Record train set summaries, and train
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        summary, _ = sess.run([merged, train_step],
+        summary, _, _ = sess.run([merged, train_step1, train_step2],
                               feed_dict=feed_dict(True),
                               options=run_options,
                               run_metadata=run_metadata)
@@ -131,7 +115,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
         train_writer.add_summary(summary, i)
         print('Adding run metadata for', i)
       else:  # Record a summary
-        summary, _ = sess.run([merged, train_step], feed_dict=feed_dict(True))
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True))
         train_writer.add_summary(summary, i)
   train_writer.close()
   test_writer.close()
@@ -145,7 +129,6 @@ def main(args):
     tf.gfile.DeleteRecursively(log_file_path)
   tf.gfile.MakeDirs(log_file_path)
   train(input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate)
-
 
 if __name__ == '__main__':
   tf.app.run()
