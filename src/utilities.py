@@ -54,7 +54,7 @@ def get_command_line_input(args):
 
 # # Variable utilities
 def tn_weight_variable(shape, stddev_value):
-  initial = tf.truncated_normal(shape=shape, stddev=stddev_value)
+  initial = tf.truncated_normal(shape=shape, stddev=stddev_value, seed=42)
   return tf.Variable(initial)
 
 def zeros_weight_variable(shape):
@@ -87,18 +87,18 @@ def dropout(x):
   with tf.name_scope('dropout'):
     keep_prob = tf.placeholder(tf.float32)
     tf.scalar_summary('dropout_keep_probability', keep_prob)
-    dropped = tf.nn.dropout(x, keep_prob)
+    dropped = tf.nn.dropout(x, keep_prob, seed=42)
   return dropped, keep_prob
 
 # loss function utilities
 
-def calculate_cross_entropy(y, y_):
+def calculate_cross_entropy(y, y_, name='1'):
   # computes cross entropy between trained y and label y_
-  with tf.name_scope('cross_entropy'):
+  with tf.name_scope('cross_entropy_'+name):
     diff = y_ * tf.log(y)
     with tf.name_scope('total'):
       cross_entropy = -tf.reduce_mean(diff)
-    tf.scalar_summary('cross_entropy', cross_entropy)
+    tf.scalar_summary('cross_entropy_'+name, cross_entropy)
   return cross_entropy
 
 # training utilities
@@ -119,11 +119,11 @@ def train(training_type, learning_rate, loss_value):
 
 # #accuracy utilities
 
-def calculate_accuracy (y, y_):
-  with tf.name_scope('accuracy'):
+def calculate_accuracy (y, y_, name='1'):
+  with tf.name_scope('accuracy_'+name):
     with tf.name_scope('correct_prediction'):
       correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     with tf.name_scope('accuracy'):
       accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.scalar_summary('accuracy', accuracy)
+    tf.scalar_summary('accuracy_'+name, accuracy)
   return accuracy
