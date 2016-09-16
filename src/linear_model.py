@@ -1,3 +1,5 @@
+
+from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import sys
 import getopt
@@ -5,8 +7,18 @@ import getopt
 import data_holder
 import utilities
 
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+flags.DEFINE_string('file_in', '', 'data in file location')
+flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
+flags.DEFINE_string('data_dir', '/tmp/logs/runx', 'Directory for storing data')
+flags.DEFINE_integer('max_steps', 10000, 'maximum steps ')
+flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
+flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
+
 def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate):
 
+  print(file_name_and_path)
   # Import data
   dh = data_holder.DataHolder(file_name_and_path, test_train_ratio, 1)
 
@@ -88,13 +100,17 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
 
 
 def main(args):
-  # Try get user input   
-  input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate = utilities.get_command_line_input(args)
-
-  if tf.gfile.Exists(log_file_path):
-    tf.gfile.DeleteRecursively(log_file_path)
-  tf.gfile.MakeDirs(log_file_path)
-  train(input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate)
+  # Try get user input 
+  # input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate = utilities.get_command_line_input(args)
+  
+  in_file_given = False
+  if not FLAGS.file_in:
+    print("Please specify the input file using the '--file_in=' flag.")
+    sys.exit(2)
+  if tf.gfile.Exists(FLAGS.data_dir):
+    tf.gfile.DeleteRecursively(FLAGS.data_dir)
+  tf.gfile.MakeDirs(FLAGS.data_dir)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.data_dir, FLAGS.max_steps, FLAGS.learning_rate, FLAGS.dropout)
 
 if __name__ == '__main__':
   tf.app.run()

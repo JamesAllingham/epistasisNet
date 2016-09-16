@@ -2,55 +2,7 @@ import tensorflow as tf
 import numpy as np
 import sys
 import getopt
-
-# File Management Utilities
-def get_command_line_input(args):
-  # # DIFFERENT COMMANDS TO READ
-  # f: input file
-  # r: train:test ratio
-  # h  help
-  # l: log directory
-  # s: max steps
-  # t: learning rate
-  # d: dropout rate
-  # #
-  try:                                
-    opts, args = getopt.getopt(args[1:], "f:r:hl:s:t:d:", ["file=", 'ratio=', 
-                                                           "help", 'logfile=',
-                                                           "maxsteps=", "learningrate=",
-                                                           "dropoutrate="]) 
-  except getopt.GetoptError:           
-    print("The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.")                         
-    sys.exit(2) 
-
-  test_train_ratio = 0.2
-  log_file_path = '/tmp/logs/'
-  max_steps = 1000
-  learning_rate = 0.001
-  dropout_rate = 0.9
-  file_arg_given = False
-  for opt, arg in opts:                
-    if opt in ("-h", "--help"):      
-      print('''The allowed arguments are '-h' for help, '-r' to specify the test-train ratio, and '-f' to specify the input file.''')                   
-      sys.exit(2)                     
-    elif opt in ("-f", "--file"):
-      input_file = arg
-      file_arg_given = True  
-    elif opt in ("-r", "--ratio"):             
-      test_train_ratio = float(arg)   
-    elif opt in ("-l", "--logfile"):
-      log_file_path += arg
-    elif opt in ("-s", "--maxsteps"):
-      max_steps = int(arg)
-    elif opt in ("-t", "--learningrate"):
-      learning_rate = float(arg)
-    elif opt in ("-d", "--dropoutrate="):
-      dropout_rate = float(arg)
-  if not file_arg_given:
-    print("Please specify the input file using the '-f' flag.")
-    sys.exit(2)
-  
-  return input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate
+from enum import Enum
 
 # # Variable utilities
 def tn_weight_variable(shape, stddev_value):
@@ -125,7 +77,7 @@ def calculate_cross_entropy(y, y_, name='1'):
 
 # training utilities
 
-class Optimizer:
+class Optimizer(Enum):
   GradientDescent = 1
   Adam = 2
 
