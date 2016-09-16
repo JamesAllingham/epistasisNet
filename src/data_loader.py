@@ -22,7 +22,7 @@ class DataLoader:
         with open(file_name_and_path, 'r') as f:
             header = f.readline().strip()
             headers = header.split("\t")
-            self.__y_2 = np.zeros(data.shape)
+            self.__y_2 = np.zeros(self.__x.shape)
             for (i,row) in enumerate(self.__y_2):
                 for (j,cell) in enumerate(row):
                     if self.__y_1[i] == 1 and headers[j][0] == 'M':
