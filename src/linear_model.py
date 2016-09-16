@@ -23,49 +23,15 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
     x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in], name='x-input')
     y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
     y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
-
-  def variable_summaries(var, name):
-    """Attach a lot of summaries to a Tensor."""
-    with tf.name_scope('summaries'):
-      mean = tf.reduce_mean(var)
-      tf.scalar_summary('mean/' + name, mean)
-      with tf.name_scope('stddev'):
-        stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
-      tf.scalar_summary('sttdev/' + name, stddev)
-      tf.scalar_summary('max/' + name, tf.reduce_max(var))
-      tf.scalar_summary('min/' + name, tf.reduce_min(var))
-      tf.histogram_summary(name, var)
-
-  def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
-    """Reusable code for making a simple neural net layer.
-    It does a matrix multiply, bias add, and then uses relu to nonlinearize.
-    It also sets up name scoping so that the resultant graph is easy to read,
-    and adds a number of summary ops.
-    """
-    # Adding a name scope ensures logical grouping of the layers in the graph.
-    with tf.name_scope(layer_name):
-      # This Variable will hold the state of the weights for the layer
-      with tf.name_scope('weights'):
-        weights = utilities.tn_weight_variable([input_dim, output_dim], 0.1)
-        variable_summaries(weights, layer_name + '/weights')
-      with tf.name_scope('biases'):
-        biases = utilities.bias_variable([output_dim])
-        variable_summaries(biases, layer_name + '/biases')
-      with tf.name_scope('Wx_plus_b'):
-        preactivate = tf.matmul(input_tensor, weights) + biases
-        tf.histogram_summary(layer_name + '/pre_activations', preactivate)
-      activations = act(preactivate, 'activation')
-      tf.histogram_summary(layer_name + '/activations', activations)
-      return activations
   
   x_flat = utilities.reshape(x, num_cols_in * num_states_in, 1)
 
-  hidden1 = nn_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1')
+  hidden1 = utilities.nn_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1', tf.nn.relu6)
 
   dropped, keep_prob = utilities.dropout(hidden1)
 
-  y1 = nn_layer(dropped, 500, num_states_out1, 'layer2_1', act=tf.nn.softmax)
-  y2 = utilities.reshape(nn_layer(dropped, 500, num_states_out2*num_cols_out2, 'layer2_2', act=tf.nn.softmax), num_cols_out2, num_states_out2)
+  y1 = utilities.nn_layer(dropped, 500, num_states_out1, 'layer2_1', act=tf.nn.softmax)
+  y2 = utilities.reshape(utilities.nn_layer(dropped, 500, num_states_out2*num_cols_out2, 'layer2_2', act=tf.nn.softmax), num_cols_out2, num_states_out2)
 
   loss1 = utilities.calculate_cross_entropy(y1, y1_, '1')
   loss2 = utilities.calculate_cross_entropy(y2, y2_, '2')
