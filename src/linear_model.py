@@ -45,14 +45,14 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
   y1 = utilities.nn_layer(dropped, 500, num_states_out1, 'layer2_1', act=tf.nn.softmax)
   y2 = utilities.reshape(utilities.nn_layer(dropped, 500, num_states_out2*num_cols_out2, 'layer2_2', act=tf.nn.softmax), num_cols_out2, num_states_out2)
 
-  loss1 = utilities.calculate_cross_entropy(y1, y1_, '1')
-  loss2 = utilities.calculate_cross_entropy(y2, y2_, '2')
+  loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
+  loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
 
-  train_step1 = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss1)
-  train_step2 = utilities.train(utilities.Optimizer.GradientDescent, learning_rate, loss2)
+  train_step1 = utilities.train(learning_rate, loss1, name_suffix='1')
+  train_step2 = utilities.train(learning_rate, loss2, name_suffix='2')
 
-  accuracy1 = utilities.calculate_accuracy(y1, y1_, '1')
-  accuracy2 = utilities.calculate_accuracy(y2, y2_, '2')
+  accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
+  accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
@@ -64,9 +64,9 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
   # Train the model, and also write summaries.
   # Every 10th step, measure test-set accuracy, and write test summaries
   # All other steps, run train_step on training data, & add training summaries
-
   def feed_dict(train):
-    """Make a TensorFlow feed_dict: maps data onto Tensor placeholders."""
+    """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
+    """
     if train:
       xs, y1s, y2s = dh.get_training_data().next_batch(100)
       k = dropout_rate
@@ -85,10 +85,8 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        summary, _, _ = sess.run([merged, train_step1, train_step2],
-                              feed_dict=feed_dict(True),
-                              options=run_options,
-                              run_metadata=run_metadata)
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True),
+                              options=run_options, run_metadata=run_metadata)
         train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
         train_writer.add_summary(summary, i)
         print('Adding run metadata for', i)

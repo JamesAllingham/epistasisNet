@@ -5,29 +5,76 @@ import getopt
 from enum import Enum
 
 # # Variable utilities
-def tn_weight_variable(shape, stddev_value):
-  initial = tf.truncated_normal(shape=shape, stddev=stddev_value, seed=42)
+def tn_weight_variable(shape, standard_deviation):
+  """ Create a weight matrix with the given shape. 
+      The weights are initialised with random values taken from a tuncated normal distribution.
+
+      Parameters:
+        shape: an array describing the shape of the weight matrix.
+        standard_deviation: the standard deviation of the truncted normal distribution.
+
+      Returns:
+        a tf.Variable containing the weight matrix.
+  """
+  initial = tf.truncated_normal(shape=shape, stddev=standard_deviation, seed=42)
   return tf.Variable(initial)
 
 def zeros_weight_variable(shape):
+  """ Create a weight matrix with the given shape. 
+      The weights are initialised with zeros.
+
+
+      Parameters:
+        shape: an array describing the shape of the weight matrix.
+
+      Returns:
+        a tf.Variable containing the weight matrix.
+  """
   initial = tf.zeros(shape=shape)
   return tf.Variable(initial)
 
 def bias_variable(shape):
-  # Create a bias variable with appropriate initialization - slightly positive to avoid deadness.
+  """ Create a bias variable with appropriate initialization.
+      This needs to be slighly positive so that the ReLU activation functions aren't in an 'off' state
+
+      Parameters:
+        shape: an array describing the shape of the bias vector.
+
+      Returns:
+        a tf.Variable containing the bias vector.
+  """
   initial = tf.constant(0.1, shape=shape)
   return tf.Variable(initial)
 
 # # nn utilities
 
 def identity(x, name):  
-  return x
+  """ identity function that can be used as the activation function of the nn_layer function to create a linear layer.
+
+      Parameters:
+        x: the tensor which must be 'activated'. 
+        name: the scope name for the graph visualization.
+
+      Returns:
+        the 'activated' tensor.
+  """
+  with tf.name_scope(name):
+    return x
 
 def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
-  """Reusable code for making a simple neural net layer.
-  It does a matrix multiply, bias add, and then uses relu to nonlinearize.
-  It also sets up name scoping so that the resultant graph is easy to read,
-  and adds a number of summary ops.
+  """ Reusable code for making a simple neural net layer.
+      It does a matrix multiply, bias add, and then adds a nonlinearity.
+      It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
+
+      Parameters:
+        input_tensor: the tensor which must travel through the layer.
+        input_dim: the input tensor's dimension.
+        output_dim: the output tensor's dimension.
+        layer_name: the layer name for the graph visualization.
+        act: the activation function to be applied to the output tensor before it is returned. The default is ReLU.
+
+      Returns:
+        the result of passing the input tensor through the Mx + b and activation layers.
   """
   # Adding a name scope ensures logical grouping of the layers in the graph.
   with tf.name_scope(layer_name):
@@ -45,13 +92,17 @@ def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
-# def nn_layer(layer_name, ):
-#   # Ideally want different activation types
-
-#   with tf.name_scope(layer_name):
-
 def reshape(x, num_cols_out, num_states_out):
-  # Reshape a tensor into desired type
+  """ Reshapes an input tensor to the given shape.
+
+      Parameters:
+        x: the input tensor to be reshaped.
+        num_cols_out: the number of elements in the first dimension of the output tensor.
+        num_states_out: the number of elements in the second dimension of the output tensor.
+
+      Returns:
+        a num_cols_out x num_states_out tensor.
+  """
   with tf.name_scope('reshape'):
     if num_states_out==1:
       flattened = tf.reshape(x, [-1, num_cols_out])
@@ -60,6 +111,15 @@ def reshape(x, num_cols_out, num_states_out):
   return flattened
 
 def dropout(x):
+  """ Apply dropout to a neural network layer.
+      This is done to prevent over fitting.
+
+      Parameters:
+        x: the tensor which must have dropout applied to it.
+
+      Returns:
+        a dropped out version of the input tensor.
+  """
   # Need to instantiate keep_prob here to correctly make the graph visualization
   with tf.name_scope('dropout'):
     keep_prob = tf.placeholder(tf.float32)
@@ -69,13 +129,23 @@ def dropout(x):
 
 # loss function utilities
 
-def calculate_cross_entropy(y, y_, name='1'):
+def calculate_cross_entropy(y, y_, name_suffix='1'):
+  """ Calculate the cross entropy as a loss function.
+
+      Parameters:
+        y: the given output tensor.
+        y_: the expected output tensor.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+
+      Returns:
+        the cross entropy of the expexted and given outputs.
+  """
   # computes cross entropy between trained y and label y_
-  with tf.name_scope('cross_entropy_'+name):
+  with tf.name_scope('cross_entropy_'+name_suffix):
     diff = y_ * tf.log(y)
     with tf.name_scope('total'):
       cross_entropy = -tf.reduce_mean(diff)
-    tf.scalar_summary('cross_entropy_'+name, cross_entropy)
+    tf.scalar_summary('cross_entropy_'+name_suffix, cross_entropy)
   return cross_entropy
 
 # training utilities
@@ -84,29 +154,57 @@ class Optimizer(Enum):
   GradientDescent = 1
   Adam = 2
 
-def train(training_type, learning_rate, loss_value):
-  # Call the optimizer to train the net
-  with tf.name_scope('train'):
-    if training_type == Optimizer.GradientDescent:
-      train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_value)
-    elif training_type == Optimizer.Adam:
-      train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss_value)
-  return train_step
+def train(learning_rate, loss_function, training_method=Optimizer.GradientDescent, name_suffix='1'):
+  """ Call the optimizer to train the neural network. 
+      The options for the Optimizer are Gradient Descent and Adam.
 
+      Parameters:
+        learning_rate: a scalar describing how fast the network should learn.
+        loss_function: the function for calcualting the loss which must be minimized.
+        training_method: the method used to minimize the loss. The default is gradient descent.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+
+      Returns:
+        a tf session that can be run to train the network.
+  """
+  with tf.name_scope('train_'+name_suffix):
+    if training_method == Optimizer.GradientDescent:
+      train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_function)
+    elif training_method == Optimizer.Adam:
+      train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
+  return train_step
 
 # #accuracy utilities
 
-def calculate_accuracy (y, y_, name='1'):
-  with tf.name_scope('accuracy_'+name):
+def calculate_accuracy (y, y_, name_suffix='1'):
+  """ Compares the output of the neural network with the expected output and returns the accuracy.
+
+      Parameters:
+        y: the given output tensor.
+        y_: the expected output tensor.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+
+      Returns:
+        a scalar describing the accuracy of the given output when compared with the expected output.
+  """
+  with tf.name_scope('accuracy_'+name_suffix):
     with tf.name_scope('correct_prediction'):
       correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     with tf.name_scope('accuracy'):
       accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    tf.scalar_summary('accuracy_'+name, accuracy)
+    tf.scalar_summary('accuracy_'+name_suffix, accuracy)
   return accuracy
 
 def variable_summaries(var, name):
-  """Attach a lot of summaries to a Tensor."""
+  """ Attach min, max, mean, and standard deviation summaries to a variable.
+
+      Parameters:
+        var: the tf.Variable to be summarised.
+        name: the name to display on the graph visualization.
+
+      Returns:
+        nothing.  
+  """
   with tf.name_scope('summaries'):
     mean = tf.reduce_mean(var)
     tf.scalar_summary('mean/' + name, mean)
