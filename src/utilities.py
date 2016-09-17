@@ -20,6 +20,9 @@ def bias_variable(shape):
 
 # # nn utilities
 
+def identity(x, name):  
+  return x
+
 def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
   """Reusable code for making a simple neural net layer.
   It does a matrix multiply, bias add, and then uses relu to nonlinearize.
