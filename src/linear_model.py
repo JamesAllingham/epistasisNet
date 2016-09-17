@@ -38,7 +38,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
   
   x_flat = utilities.reshape(x, num_cols_in * num_states_in, 1)
 
-  hidden1 = utilities.nn_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1', tf.nn.relu6)
+  hidden1 = utilities.nn_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1', act=utilities.identity)
 
   dropped, keep_prob = utilities.dropout(hidden1)
 
@@ -100,10 +100,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
 
 
 def main(args):
-  # Try get user input 
-  # input_file, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate = utilities.get_command_line_input(args)
-  
-  in_file_given = False
+  # Try get user input   
   if not FLAGS.file_in:
     print("Please specify the input file using the '--file_in=' flag.")
     sys.exit(2)
