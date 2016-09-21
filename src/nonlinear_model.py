@@ -11,7 +11,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('file_in', '', 'data in file location')
 flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
-flags.DEFINE_string('data_dir', '/tmp/logs/runx', 'Directory for storing data')
+flags.DEFINE_string('logdir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_integer('max_steps', 10000, 'maximum steps ')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
@@ -105,10 +105,10 @@ def main(args):
   if not FLAGS.file_in:
     print("Please specify the input file using the '--file_in=' flag.")
     sys.exit(2)
-  if tf.gfile.Exists(FLAGS.data_dir):
-    tf.gfile.DeleteRecursively(FLAGS.data_dir)
-  tf.gfile.MakeDirs(FLAGS.data_dir)
-  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.data_dir, FLAGS.max_steps, FLAGS.learning_rate, FLAGS.dropout)
+  if tf.gfile.Exists(FLAGS.logdir):
+    tf.gfile.DeleteRecursively(FLAGS.logdir)
+  tf.gfile.MakeDirs(FLAGS.logdir)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.logdir, FLAGS.max_steps, FLAGS.learning_rate, FLAGS.dropout)
 
 if __name__ == '__main__':
   tf.app.run()
