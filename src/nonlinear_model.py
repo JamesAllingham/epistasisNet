@@ -14,7 +14,6 @@ flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
 flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
 flags.DEFINE_integer('batch_size', 100, 'training batch size')
 flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
-flags.DEFINE_integer('max_steps', 10000, 'maximum steps ')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 
@@ -80,12 +79,12 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
 
   for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False))
+      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
       test_writer.add_summary(summary, i)
       print('Accuracy at step %s for output 1: %s' % (i, acc1))
       print('Accuracy at step %s for output 2: %s' % (i, acc2))
-      print('Cost at step %s for output 2: %s' % (i, acc2))
-      print('Cost at step %s for output 2: %s' % (i, acc2))
+      print('Cost at step %s for output 2: %s' % (i, cost1))
+      print('Cost at step %s for output 2: %s' % (i, cost2))
     else:  # Record train set summaries, and train
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
