@@ -12,11 +12,12 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('file_in', '', 'data in file location')
 flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
 flags.DEFINE_string('data_dir', '/tmp/logs/runx', 'Directory for storing data')
-flags.DEFINE_integer('max_steps', 10000, 'maximum steps ')
+flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
+flags.DEFINE_integer('batch_size', 100, 'training batch size')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 
-def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learning_rate, dropout_rate):
+def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate):
 
   print(file_name_and_path)
   # Import data
@@ -36,15 +37,15 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
     y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
     y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
   
-  x_flat = utilities.reshape(x, num_cols_in * num_states_in, 1)
+  x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
 
-  hidden1 = utilities.nn_layer(x_flat, num_cols_in*num_states_in, 1000, 'hidden1')
-  hidden2 = utilities.nn_layer(hidden1, 1000, 500, 'hidden2')
+  hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 1000, layer_name='hidden_1')
+  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
 
   dropped, keep_prob = utilities.dropout(hidden2)
 
-  y1 = utilities.nn_layer(dropped, 500, num_states_out1, 'softmax_1', act=tf.nn.softmax)
-  y2 = utilities.reshape(utilities.nn_layer(dropped, 500, num_states_out2*num_cols_out2, 'softmax_2', act=tf.nn.softmax), num_cols_out2, num_states_out2)
+  y1 = utilities.fc_layer(dropped, 500, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+  y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2])
 
   loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
   loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
@@ -65,11 +66,11 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
   # Train the model, and also write summaries.
   # Every 10th step, measure test-set accuracy, and write test summaries
   # All other steps, run train_step on training data, & add training summaries
-  def feed_dict(train):
+  def feed_dict(train, batch_size):
     """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
     """
     if train:
-      xs, y1s, y2s = dh.get_training_data().next_batch(100)
+      xs, y1s, y2s = dh.get_training_data().next_batch(batch_size)
       k = dropout_rate
     else:
       xs, y1s, y2s = dh.get_testing_data().next_batch(1000)
@@ -78,7 +79,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
 
   for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc1, acc2 = sess.run([merged, accuracy1, accuracy2], feed_dict=feed_dict(False))
+      summary, acc1, acc2 = sess.run([merged, accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size))
       test_writer.add_summary(summary, i)
       print('Accuracy at step %s for output 1: %s' % (i, acc1))
       print('Accuracy at step %s for output 2: %s' % (i, acc2))
@@ -86,13 +87,13 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, learni
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True),
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size),
                               options=run_options, run_metadata=run_metadata)
         train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
         train_writer.add_summary(summary, i)
         print('Adding run metadata for', i)
       else:  # Record a summary
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True))
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size))
         train_writer.add_summary(summary, i)
   train_writer.close()
   test_writer.close()
@@ -106,7 +107,7 @@ def main(args):
   if tf.gfile.Exists(FLAGS.data_dir):
     tf.gfile.DeleteRecursively(FLAGS.data_dir)
   tf.gfile.MakeDirs(FLAGS.data_dir)
-  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.data_dir, FLAGS.max_steps, FLAGS.learning_rate, FLAGS.dropout)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.data_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.dropout)
 
 if __name__ == '__main__':
   tf.app.run()
