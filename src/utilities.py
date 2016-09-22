@@ -9,7 +9,7 @@ def tn_weight_variable(shape, standard_deviation):
   """ Create a weight matrix with the given shape. 
       The weights are initialised with random values taken from a tuncated normal distribution.
 
-      Parameters:
+      Arguments:
         shape: an array describing the shape of the weight matrix.
         standard_deviation: the standard deviation of the truncted normal distribution.
 
@@ -24,7 +24,7 @@ def zeros_weight_variable(shape):
       The weights are initialised with zeros.
 
 
-      Parameters:
+      Arguments:
         shape: an array describing the shape of the weight matrix.
 
       Returns:
@@ -37,7 +37,7 @@ def bias_variable(shape):
   """ Create a bias variable with appropriate initialization.
       This needs to be slighly positive so that the ReLU activation functions aren't in an 'off' state
 
-      Parameters:
+      Arguments:
         shape: an array describing the shape of the bias vector.
 
       Returns:
@@ -49,9 +49,9 @@ def bias_variable(shape):
 # # nn utilities
 
 def identity(x, name):  
-  """ identity function that can be used as the activation function of the nn_layer function to create a linear layer.
+  """ identity function that can be used as the activation function of the fc_layer function to create a linear layer.
 
-      Parameters:
+      Arguments:
         x: the tensor which must be 'activated'. 
         name: the scope name for the graph visualization.
 
@@ -61,13 +61,13 @@ def identity(x, name):
   with tf.name_scope(name):
     return x
 
-def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
-  """ Reusable code for making a simple neural net layer.
+def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
+  """ Reusable code for making a hidden neural net layer.
       It does a matrix multiply, bias add, and then adds a nonlinearity.
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
 
-      Parameters:
-        input_tensor: the tensor which must travel through the layer.
+      Arguments:
+        x: the tensor which must travel through the layer.
         input_dim: the input tensor's dimension.
         output_dim: the output tensor's dimension.
         layer_name: the layer name for the graph visualization.
@@ -86,35 +86,62 @@ def nn_layer(input_tensor, input_dim, output_dim, layer_name, act=tf.nn.relu):
       biases = bias_variable([output_dim])
       variable_summaries(biases, layer_name + '/biases')
     with tf.name_scope('Wx_plus_b'):
-      preactivate = tf.matmul(input_tensor, weights) + biases
+      preactivate = tf.matmul(x, weights) + biases
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
     activations = act(preactivate, 'activation')
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
-def reshape(x, num_cols_out, num_states_out):
+def reshape(x, shape):
   """ Reshapes an input tensor to the given shape.
 
-      Parameters:
+      Arguments:
         x: the input tensor to be reshaped.
-        num_cols_out: the number of elements in the first dimension of the output tensor.
-        num_states_out: the number of elements in the second dimension of the output tensor.
+        shape: an array describing the output tensor shape.
 
       Returns:
-        a num_cols_out x num_states_out tensor.
+        a reshaped tensor.
   """
   with tf.name_scope('reshape'):
-    if num_states_out==1:
-      flattened = tf.reshape(x, [-1, num_cols_out])
-    else:
-      flattened = tf.reshape(x, [-1, num_cols_out, num_states_out])
-  return flattened
+    reshaped = tf.reshape(x, shape) 
+  return reshaped
+
+def conv_layer(x, kernel_shape, standard_deviation, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
+  """ Reusable code for making a convolutional neural net layer.
+      It applies a convoltion to the input
+      It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
+
+      Arguments:
+        x: the tensor which must travel through the layer. The tensor must have shape: [batch, in_height, in_width, in_channels]
+        kernel_shape: an array describing the shape of the kernel: [filter_height, filter_width, in_channels, out_channels]
+        filter_strides: an array describing how often the filter is applied: [1, stride_horizontal, stride_verticle, 1].
+        filter_padding: the padding scheme applied by the convolutinal filter see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+        act: the activation function to be applied to the output tensor before it is returned. The default is ReLU.
+      
+      Returns:
+        the result of passing the input tensor through the convolutional layer, with a number of channels equal to out_channels.
+  """
+  layer_name = 'conv_' + name_suffix
+  with tf.variable_scope(layer_name) as scope:
+    with tf.name_scope('kernel'):
+      kernel = tn_weight_variable(kernel_shape, standard_deviation)
+      variable_summaries(kernel, layer_name + '/kernel') 
+    with tf.name_scope('biases'):
+      biases = bias_variable([kernel_shape[3]])
+      variable_summaries(biases, layer_name + '/biases')   
+    with tf.name_scope('convolution_and_bias'):   
+      preactivate = tf.nn.conv2d(images, kernel, filter_strides, padding=filter_padding)
+      tf.histogram_summary(layer_name + '/pre_activations', preactivate)
+    activations = act(preactivate, 'activation')
+    tf.histogram_summary(layer_name + '/activations', activations)
+    return activations
 
 def dropout(x):
   """ Apply dropout to a neural network layer.
       This is done to prevent over fitting.
 
-      Parameters:
+      Arguments:
         x: the tensor which must have dropout applied to it.
 
       Returns:
@@ -132,7 +159,7 @@ def dropout(x):
 def calculate_cross_entropy(y, y_, name_suffix='1'):
   """ Calculate the cross entropy as a loss function.
 
-      Parameters:
+      Arguments:
         y: the given output tensor.
         y_: the expected output tensor.
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
@@ -158,7 +185,7 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
   """ Call the optimizer to train the neural network. 
       The options for the Optimizer are Gradient Descent and Adam.
 
-      Parameters:
+      Arguments:
         learning_rate: a scalar describing how fast the network should learn.
         loss_function: the function for calcualting the loss which must be minimized.
         training_method: the method used to minimize the loss. The default is gradient descent.
@@ -179,7 +206,7 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
 def calculate_accuracy (y, y_, name_suffix='1'):
   """ Compares the output of the neural network with the expected output and returns the accuracy.
 
-      Parameters:
+      Arguments:
         y: the given output tensor.
         y_: the expected output tensor.
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
@@ -198,7 +225,7 @@ def calculate_accuracy (y, y_, name_suffix='1'):
 def variable_summaries(var, name):
   """ Attach min, max, mean, and standard deviation summaries to a variable.
 
-      Parameters:
+      Arguments:
         var: the tf.Variable to be summarised.
         name: the name to display on the graph visualization.
 
