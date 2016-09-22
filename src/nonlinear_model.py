@@ -11,9 +11,10 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('file_in', '', 'data in file location')
 flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
-flags.DEFINE_string('data_dir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
 flags.DEFINE_integer('batch_size', 100, 'training batch size')
+flags.DEFINE_string('logdir', '/tmp/logs/runx', 'Directory for storing data')
+flags.DEFINE_integer('max_steps', 10000, 'maximum steps ')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 
