@@ -50,8 +50,8 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
   loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
   loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
 
-  train_step1 = utilities.train(learning_rate, loss1, name_suffix='1')
-  train_step2 = utilities.train(learning_rate, loss2, name_suffix='2')
+  train_step1 = utilities.train(learning_rate, loss1, training_method=utilities.Optimizer.Adam, name_suffix='1')
+  train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
 
   accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
   accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
@@ -79,10 +79,12 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
 
   for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc1, acc2 = sess.run([merged, accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size))
+      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False))
       test_writer.add_summary(summary, i)
       print('Accuracy at step %s for output 1: %s' % (i, acc1))
       print('Accuracy at step %s for output 2: %s' % (i, acc2))
+      print('Cost at step %s for output 2: %s' % (i, acc2))
+      print('Cost at step %s for output 2: %s' % (i, acc2))
     else:  # Record train set summaries, and train
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)

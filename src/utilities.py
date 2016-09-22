@@ -180,6 +180,10 @@ def calculate_cross_entropy(y, y_, name_suffix='1'):
 class Optimizer(Enum):
   GradientDescent = 1
   Adam = 2
+  Adadelta = 3
+  Adagrad = 4
+  RMSProp = 5
+  Ftrl = 6
 
 def train(learning_rate, loss_function, training_method=Optimizer.GradientDescent, name_suffix='1'):
   """ Call the optimizer to train the neural network. 
@@ -199,6 +203,14 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
       train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_function)
     elif training_method == Optimizer.Adam:
       train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
+    elif training_method == Optimizer.Adadelta:
+      train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(loss_function)
+    elif training_method == Optimizer.Adagrad:
+      train_step = tf.train.AdagradOptimizer(learning_rate).minimize(loss_function)
+    elif training_method == Optimizer.RMSProp:
+      train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss_function)
+    elif training_method == Optimizer.Ftrl:
+      train_step = tf.train.FtrlOptimizer(learning_rate).minimize(loss_function)
   return train_step
 
 # #accuracy utilities
