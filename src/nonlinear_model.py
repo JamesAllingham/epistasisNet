@@ -18,7 +18,7 @@ flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 
-def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate):
+def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_batch_size, test_batch_size, learning_rate, dropout_rate):
 
   print(file_name_and_path)
   # Import data
@@ -67,20 +67,20 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
   # Train the model, and also write summaries.
   # Every 10th step, measure test-set accuracy, and write test summaries
   # All other steps, run train_step on training data, & add training summaries
-  def feed_dict(train, batch_size):
+  def feed_dict(train, train_batch_size, test_batch_size):
     """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
     """
     if train:
-      xs, y1s, y2s = dh.get_training_data().next_batch(batch_size)
+      xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
       k = dropout_rate
     else:
-      xs, y1s, y2s = dh.get_testing_data().next_batch(1000)
+      xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
       k = 1.0
     return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
   for i in range(max_steps):
     if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
+      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
       test_writer.add_summary(summary, i)
       print('Accuracy at step %s for output 1: %s' % (i, acc1))
       print('Accuracy at step %s for output 2: %s' % (i, acc2))
@@ -90,13 +90,13 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
       if i % 100 == 99:  # Record execution stats
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size),
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size),
                               options=run_options, run_metadata=run_metadata)
         train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
         train_writer.add_summary(summary, i)
         print('Adding run metadata for', i)
       else:  # Record a summary
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size))
+        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
         train_writer.add_summary(summary, i)
   train_writer.close()
   test_writer.close()
@@ -110,7 +110,7 @@ def main(args):
   if tf.gfile.Exists(FLAGS.log_dir):
     tf.gfile.DeleteRecursively(FLAGS.log_dir)
   tf.gfile.MakeDirs(FLAGS.log_dir)
-  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.dropout)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.test_batch_size, FLAGS.learning_rate, FLAGS.dropout)
 
 if __name__ == '__main__':
   tf.app.run()
