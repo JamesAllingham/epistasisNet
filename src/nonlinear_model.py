@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import sys
 import getopt
+from math import sqrt
 
 import data_holder
 import utilities
-from math import sqrt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
