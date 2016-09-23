@@ -131,7 +131,7 @@ def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1]
       biases = bias_variable([kernel_shape[3]])
       variable_summaries(biases, layer_name + '/biases')   
     with tf.name_scope('convolution_and_bias'):   
-      preactivate = tf.nn.conv2d(images, kernel, filter_strides, padding=filter_padding)
+      preactivate = tf.nn.conv2d(x, kernel, filter_strides, padding=filter_padding)
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
     activations = act(preactivate, 'activation')
     tf.histogram_summary(layer_name + '/activations', activations)
