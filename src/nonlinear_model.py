@@ -19,7 +19,7 @@ flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 
 def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate):
 
-  print(file_name_and_path)
+  print("Loading data from: %s" % file_name_and_path)
   # Import data
   dh = data_holder.DataHolder(file_name_and_path, test_train_ratio, 1)
 
@@ -27,9 +27,6 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
   num_rows_in, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
   num_rows_out1, num_states_out1 = dh.get_training_data().get_output1_shape()
   num_rows_out2, num_cols_out2, num_states_out2 = dh.get_training_data().get_output2_shape()
-
-  tf.set_random_seed(42)
-  sess = tf.InteractiveSession()
 
   # Input placeholders
   with tf.name_scope('input'):
@@ -58,10 +55,6 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
-  train_writer = tf.train.SummaryWriter(log_file_path + '/train',
-                                        sess.graph)
-  test_writer = tf.train.SummaryWriter(log_file_path + '/test')
-  tf.initialize_all_variables().run()
 
   # Train the model, and also write summaries.
   # Every 10th step, measure test-set accuracy, and write test summaries
@@ -77,31 +70,58 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
       k = 1.0
     return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
-  for i in range(max_steps):
-    if i % 10 == 0:  # Record summaries and test-set accuracy
-      summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
-      test_writer.add_summary(summary, i)
-      print('Accuracy at step %s for output 1: %s' % (i, acc1))
-      print('Accuracy at step %s for output 2: %s' % (i, acc2))
-      print('Cost at step %s for output 2: %s' % (i, cost1))
-      print('Cost at step %s for output 2: %s' % (i, cost2))
-    else:  # Record train set summaries, and train
-      if i % 100 == 99:  # Record execution stats
-        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        run_metadata = tf.RunMetadata()
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size),
-                              options=run_options, run_metadata=run_metadata)
-        train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
-        train_writer.add_summary(summary, i)
-        print('Adding run metadata for', i)
-      else:  # Record a summary
-        summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size))
-        train_writer.add_summary(summary, i)
-  train_writer.close()
-  test_writer.close()
+  with tf.Session() as sess:
+
+    # Create a saver.
+    saver = tf.train.Saver()
+
+    train_writer = tf.train.SummaryWriter(log_file_path + '/train', sess.graph)
+    test_writer = tf.train.SummaryWriter(log_file_path + '/test')
+
+    sess.run(tf.initialize_all_variables())
+
+    for i in range(max_steps):
+      best_acc1 = 0
+      best_acc2 = 0
+      if i % 10 == 0:  # Record summaries and test-set accuracy
+        summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
+        test_writer.add_summary(summary, i)
+        print('Accuracy at step %s for output 1: %f' % (i, acc1))
+        print('Accuracy at step %s for output 2: %f' % (i, acc2))
+        print('Cost at step %s for output 1: %f' % (i, cost1))
+        print('Cost at step %s for output 2: %f' % (i, cost2))
+
+        # save the model every time a new best accuracy is reached
+        if acc1 >= best_acc1:
+          best_acc1 = acc1
+          best_acc2 = acc2
+          saver.save(sess, '/tmp/tf_models/nonlinear_model')
+          print("saving model at iteration %i" % i)
+
+      else:  # Record train set summaries, and train
+        if i % 100 == 99:  # Record execution stats
+          run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+          run_metadata = tf.RunMetadata()
+          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size), options=run_options, run_metadata=run_metadata)
+          train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
+          train_writer.add_summary(summary, i)
+          print('Adding run metadata for', i)
+        else:  # Record a summary
+          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size))
+          train_writer.add_summary(summary, i)
+
+    train_writer.close()
+    test_writer.close()
+
+    saver.restore(sess, '/tmp/tf_models/nonlinear_model')
+
+    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size))
+    print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
 def main(args):
+  tf.set_random_seed(42)
+
   # Try get user input   
   if not FLAGS.file_in:
     print("Please specify the input file using the '--file_in=' flag.")
