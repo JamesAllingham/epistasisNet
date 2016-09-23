@@ -200,17 +200,17 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
   """
   with tf.name_scope('train_'+name_suffix):
     if training_method == Optimizer.GradientDescent:
-      train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.GradientDescentOptimizer(learning_rate, name="GradientDescent_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adam:
-      train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdamOptimizer(learning_rate, name="Adam_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adadelta:
-      train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdadeltaOptimizer(learning_rate, name="Adadelta_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adagrad:
-      train_step = tf.train.AdagradOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdagradOptimizer(learning_rate, name="Adagrad_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.RMSProp:
-      train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.RMSPropOptimizer(learning_rate, name="RMSProp_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Ftrl:
-      train_step = tf.train.FtrlOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.FtrlOptimizer(learning_rate, name="Ftrl_"+name_suffix).minimize(loss_function)
   return train_step
 
 # #accuracy utilities
