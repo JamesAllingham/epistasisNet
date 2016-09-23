@@ -61,7 +61,7 @@ def identity(x, name):
   with tf.name_scope(name):
     return x
 
-def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
+def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=tf.nn.relu):
   """ Reusable code for making a hidden neural net layer.
       It does a matrix multiply, bias add, and then adds a nonlinearity.
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
@@ -80,7 +80,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
   with tf.name_scope(layer_name):
     # This Variable will hold the state of the weights for the layer
     with tf.name_scope('weights'):
-      weights = tn_weight_variable([input_dim, output_dim], 0.1)
+      weights = tn_weight_variable([input_dim, output_dim], standard_deviation)
       variable_summaries(weights, layer_name + '/weights')
     with tf.name_scope('biases'):
       biases = bias_variable([output_dim])
@@ -106,7 +106,7 @@ def reshape(x, shape):
     reshaped = tf.reshape(x, shape) 
   return reshaped
 
-def conv_layer(x, kernel_shape, standard_deviation, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
+def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
   """ Reusable code for making a convolutional neural net layer.
       It applies a convoltion to the input
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
