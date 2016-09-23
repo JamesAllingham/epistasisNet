@@ -6,6 +6,7 @@ import getopt
 
 import data_holder
 import utilities
+from math import sqrt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -16,8 +17,9 @@ flags.DEFINE_integer('batch_size', 100, 'training batch size')
 flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
 flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
+flags.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
 
-def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate):
+def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate, model_dir):
 
   print("Loading data from: %s" % file_name_and_path)
   # Import data
@@ -79,10 +81,11 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
     test_writer = tf.train.SummaryWriter(log_file_path + '/test')
 
     sess.run(tf.initialize_all_variables())
+    save_path = ''
 
+    best_cost = float('inf')
     for i in range(max_steps):
-      best_acc1 = 0
-      best_acc2 = 0
+      
       if i % 10 == 0:  # Record summaries and test-set accuracy
         summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
         test_writer.add_summary(summary, i)
@@ -92,10 +95,10 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
         print('Cost at step %s for output 2: %f' % (i, cost2))
 
         # save the model every time a new best accuracy is reached
-        if acc1 >= best_acc1:
-          best_acc1 = acc1
-          best_acc2 = acc2
-          saver.save(sess, '/tmp/tf_models/nonlinear_model')
+        print(sqrt(cost1**2 + cost2**2), best_cost )
+        if sqrt(cost1**2 + cost2**2) <= best_cost:
+          best_cost = sqrt(cost1**2 + cost2**2)
+          save_path = saver.save(sess, model_dir + 'nonlinear_model')
           print("saving model at iteration %i" % i)
 
       else:  # Record train set summaries, and train
@@ -113,14 +116,14 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
     train_writer.close()
     test_writer.close()
 
-    saver.restore(sess, '/tmp/tf_models/nonlinear_model')
+    saver.restore(sess, save_path)
 
     best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size))
     print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
 def main(args):
-  tf.set_random_seed(42)
+  tf.set_random_seed(42) 
 
   # Try get user input   
   if not FLAGS.file_in:
@@ -129,7 +132,9 @@ def main(args):
   if tf.gfile.Exists(FLAGS.log_dir):
     tf.gfile.DeleteRecursively(FLAGS.log_dir)
   tf.gfile.MakeDirs(FLAGS.log_dir)
-  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.dropout)
+  if not tf.gfile.Exists(FLAGS.model_dir):
+    tf.gfile.MakeDirs(FLAGS.model_dir)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.dropout, FLAGS.model_dir)
 
 if __name__ == '__main__':
   tf.app.run()
