@@ -88,7 +88,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=t
     with tf.name_scope('Wx_plus_b'):
       preactivate = tf.matmul(x, weights) + biases
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
-    activations = act(preactivate, 'activation')
+    activations = act(preactivate, name='activation')
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
