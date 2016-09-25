@@ -95,7 +95,6 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
         print('Cost at step %s for output 2: %f' % (i, cost2))
 
         # save the model every time a new best accuracy is reached
-        print(sqrt(cost1**2 + cost2**2), best_cost )
         if sqrt(cost1**2 + cost2**2) <= best_cost:
           best_cost = sqrt(cost1**2 + cost2**2)
           save_path = saver.save(sess, model_dir + 'nonlinear_model')
