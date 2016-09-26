@@ -36,18 +36,37 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
     y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
     y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
 
-  x_4d = tf.reshape(x, [-1, 100, 3, 1])  
-  
+  print("x Shape: %s" % x.get_shape())
+  print("y1_ Shape: %s" % y1_.get_shape())
+  print("y2_ Shape: %s" % y2_.get_shape())
+
+  x_4d = utilities.reshape(x, [-1, 100, 3, 1])  
+
+  print("x_4d_ Shape: %s" %  x_4d.get_shape())
+
   conv1 = utilities.conv_layer(x_4d, [3,3,1,10], filter_strides=[1,1,1,1])
 
-  flatten = utilities.reshape(conv1, [-1, 100*10])
+  print("conv1_ Shape: %s" % conv1.get_shape())
+
+  flatten = utilities.reshape(conv1, [-1, 100*10*3])
+
+  print("flatten Shape: %s" % flatten.get_shape())
   
-  hidden = utilities.fc_layer(flatten, 1000, 500, layer_name='hidden')
+  hidden = utilities.fc_layer(flatten, 3000, 500, layer_name='hidden')
+
+  print("hidden Shape: %s" % hidden.get_shape())
 
   dropped, keep_prob = utilities.dropout(hidden)
 
+  print("dropped Shape: %s" % dropped.get_shape())
+
   y1 = utilities.fc_layer(dropped, 500, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+
+  print("y1 Shape: %s" % y1.get_shape())
+
   y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2])
+
+  print("y2 Shape: %s" % y2.get_shape())
 
   loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
   loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
@@ -75,8 +94,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
       k = 1.0
     return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
-  with tf.Session() as sess:
-
+  with tf.Session() as sess:    
     # Create a saver.
     saver = tf.train.Saver()
 
