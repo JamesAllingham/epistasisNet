@@ -21,7 +21,7 @@ flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
 flags.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
 
 
-def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_size, learning_rate, dropout_rate, model_dir):
+def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_batch_size, test_batch_size, learning_rate, dropout_rate, model_dir):
 
   print("Loading data from: %s" % file_name_and_path)
   # Import data
@@ -89,7 +89,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
     for i in range(max_steps):
       
       if i % 10 == 0:  # Record summaries and test-set accuracy
-        summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, batch_size))
+        summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
         test_writer.add_summary(summary, i)
         print('Accuracy at step %s for output 1: %f' % (i, acc1))
         print('Accuracy at step %s for output 2: %f' % (i, acc2))
@@ -106,12 +106,12 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
         if i % 100 == 99:  # Record execution stats
           run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
           run_metadata = tf.RunMetadata()
-          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size), options=run_options, run_metadata=run_metadata)
+          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
           train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
           train_writer.add_summary(summary, i)
           print('Adding run metadata for', i)
         else:  # Record a summary
-          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, batch_size))
+          summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
           train_writer.add_summary(summary, i)
 
     train_writer.close()
@@ -119,7 +119,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
 
     saver.restore(sess, save_path)
 
-    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size))
+    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
     print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
@@ -135,7 +135,7 @@ def main(args):
   tf.gfile.MakeDirs(FLAGS.log_dir)
   if not tf.gfile.Exists(FLAGS.model_dir):
     tf.gfile.MakeDirs(FLAGS.model_dir)
-  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.dropout, FLAGS.model_dir)
+  train(FLAGS.file_in, FLAGS.tt_ratio, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.test_batch_size, FLAGS.learning_rate, FLAGS.dropout, FLAGS.model_dir)
 
 if __name__ == '__main__':
   tf.app.run()
