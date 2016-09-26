@@ -61,7 +61,7 @@ def identity(x, name):
   with tf.name_scope(name):
     return x
 
-def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
+def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=tf.nn.relu):
   """ Reusable code for making a hidden neural net layer.
       It does a matrix multiply, bias add, and then adds a nonlinearity.
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
@@ -80,7 +80,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
   with tf.name_scope(layer_name):
     # This Variable will hold the state of the weights for the layer
     with tf.name_scope('weights'):
-      weights = tn_weight_variable([input_dim, output_dim], 0.1)
+      weights = tn_weight_variable([input_dim, output_dim], standard_deviation)
       variable_summaries(weights, layer_name + '/weights')
     with tf.name_scope('biases'):
       biases = bias_variable([output_dim])
@@ -88,7 +88,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, act=tf.nn.relu):
     with tf.name_scope('Wx_plus_b'):
       preactivate = tf.matmul(x, weights) + biases
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
-    activations = act(preactivate, 'activation')
+    activations = act(preactivate, name='activation')
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
@@ -106,7 +106,7 @@ def reshape(x, shape):
     reshaped = tf.reshape(x, shape) 
   return reshaped
 
-def conv_layer(x, kernel_shape, standard_deviation, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
+def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
   """ Reusable code for making a convolutional neural net layer.
       It applies a convoltion to the input
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
@@ -131,7 +131,7 @@ def conv_layer(x, kernel_shape, standard_deviation, filter_strides=[1,1,1,1], fi
       biases = bias_variable([kernel_shape[3]])
       variable_summaries(biases, layer_name + '/biases')   
     with tf.name_scope('convolution_and_bias'):   
-      preactivate = tf.nn.conv2d(images, kernel, filter_strides, padding=filter_padding)
+      preactivate = tf.nn.conv2d(x, kernel, filter_strides, padding=filter_padding)
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
     activations = act(preactivate, 'activation')
     tf.histogram_summary(layer_name + '/activations', activations)
@@ -200,17 +200,17 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
   """
   with tf.name_scope('train_'+name_suffix):
     if training_method == Optimizer.GradientDescent:
-      train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.GradientDescentOptimizer(learning_rate, name="GradientDescent_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adam:
-      train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdamOptimizer(learning_rate, name="Adam_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adadelta:
-      train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdadeltaOptimizer(learning_rate, name="Adadelta_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Adagrad:
-      train_step = tf.train.AdagradOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.AdagradOptimizer(learning_rate, name="Adagrad_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.RMSProp:
-      train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.RMSPropOptimizer(learning_rate, name="RMSProp_"+name_suffix).minimize(loss_function)
     elif training_method == Optimizer.Ftrl:
-      train_step = tf.train.FtrlOptimizer(learning_rate).minimize(loss_function)
+      train_step = tf.train.FtrlOptimizer(learning_rate, name="Ftrl_"+name_suffix).minimize(loss_function)
   return train_step
 
 # #accuracy utilities
