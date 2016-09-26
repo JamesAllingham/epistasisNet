@@ -44,19 +44,23 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
 
   print("x_4d_ Shape: %s" %  x_4d.get_shape())
 
-  conv1 = utilities.conv_layer(x_4d, [3,3,1,10], filter_strides=[1,1,1,1])
+  conv1 = utilities.conv_layer(x_4d, [3,3,1,8], filter_padding='SAME', name_suffix='1')
+  conv2 = utilities.conv_layer(conv1, [3,3,8,16], filter_padding='SAME', name_suffix='2')
 
-  print("conv1_ Shape: %s" % conv1.get_shape())
+  print("conv1 Shape: %s" % conv1.get_shape())
+  print("conv2 Shape: %s" % conv2.get_shape())
 
-  flatten = utilities.reshape(conv1, [-1, 100*10*3])
+  flatten = utilities.reshape(conv2, [-1, 3*100*16])
 
   print("flatten Shape: %s" % flatten.get_shape())
   
-  hidden = utilities.fc_layer(flatten, 3000, 500, layer_name='hidden')
+  hidden1 = utilities.fc_layer(flatten, 4800, 1000, layer_name='hidden1')
+  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden2')
 
-  print("hidden Shape: %s" % hidden.get_shape())
+  print("hidden1 Shape: %s" % hidden1.get_shape())
+  print("hidden2 Shape: %s" % hidden2.get_shape())
 
-  dropped, keep_prob = utilities.dropout(hidden)
+  dropped, keep_prob = utilities.dropout(hidden2)
 
   print("dropped Shape: %s" % dropped.get_shape())
 
@@ -116,7 +120,6 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, batch_
         print('Cost at step %s for output 2: %f' % (i, cost2))
 
         # save the model every time a new best accuracy is reached
-        print(sqrt(cost1**2 + cost2**2), best_cost )
         if sqrt(cost1**2 + cost2**2) <= best_cost:
           best_cost = sqrt(cost1**2 + cost2**2)
           save_path = saver.save(sess, model_dir + 'convolutional_model')
