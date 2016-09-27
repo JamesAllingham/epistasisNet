@@ -215,7 +215,7 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
 
 # #accuracy utilities
 
-def calculate_accuracy (y, y_, name_suffix='1'):
+def calculate_accuracy (y, y_, snps_to_check=0, name_suffix='1'):
   """ Compares the output of the neural network with the expected output and returns the accuracy.
 
       Arguments:
@@ -227,6 +227,39 @@ def calculate_accuracy (y, y_, name_suffix='1'):
         a scalar describing the accuracy of the given output when compared with the expected output.
   """
   with tf.name_scope('accuracy_'+name_suffix):
+    if snps_to_check != 0:
+      print('y: %s, y_: %s' % (y.get_shape(), y_.get_shape()))
+      # split y
+      y_left, y_right = tf.split(2, 2, y, name = 'split')
+      print('y_left: %s, y_right: %s' % (y_left.get_shape(), y_right.get_shape()))
+
+      # get k many max values
+      values, indices = tf.nn.top_k(y, snps_to_check, name='snp_probabilities')
+      print('values: %s' % values.get_shape())
+
+      # get smallest value as a 0D tensor
+      min_value = tf.reduce_min(values, name='find_min')
+      print('min_value: %s' % min_value.get_shape())
+
+      # create tensor of smallest snp value same size as y_left
+      ones_tensor = tf.ones([y.get_shape()[1], 1], tf.float32)
+      true_bool_tensor = tf.cast(ones_tensor, tf.bool)
+      print('ones_tensor: %s' % ones_tensor.get_shape())
+
+      min_value_tensor = tf.mul(ones_tensor, min_value)
+      print('min_value_tensor: %s' % min_value_tensor.get_shape())
+
+      # compare all snps with that of min_value_tensor to find which are >= to it
+      predicted_snps = tf.greater_equal(y_left, min_value_tensor, name='predicted_snps')
+      print('predicted_snps: %s' % predicted_snps.get_shape())
+
+      # create mirrored tensor and concat together (needs to be in bool for xor)
+      prediction_tensor_bool = tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, true_bool_tensor)], name='concat')
+
+      # cast to 1s and 0s
+      y = tf.cast(prediction_tensor_bool, tf.float32)
+      print('prediction_tensor: %s' % y.get_shape())
+      
     with tf.name_scope('correct_prediction'):
       correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
     with tf.name_scope('accuracy'):

@@ -54,8 +54,8 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
   train_step1 = utilities.train(learning_rate, loss1, training_method=utilities.Optimizer.Adam, name_suffix='1')
   train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
 
-  accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
-  accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
+  accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1') #y1 shape is (?, 2), 2 = is there epistasis? (yes/no)
+  accuracy2 = utilities.calculate_accuracy(y2, y2_, 2, name_suffix='2') #y2 shape is (?, 10, 2) 10 is snp size, 2 = is it contributing? (yes/no)
 
   # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
   merged = tf.merge_all_summaries()
