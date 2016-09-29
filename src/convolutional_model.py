@@ -143,7 +143,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
     saver.restore(sess, save_path)
 
-    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size, test_batch_size))
+    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
     print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
