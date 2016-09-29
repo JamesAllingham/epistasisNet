@@ -45,8 +45,8 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
   print("x_4d_ Shape: %s" %  x_4d.get_shape())
 
-  conv1 = utilities.conv_layer(x_4d, [3,3,1,8], filter_padding='SAME', name_suffix='1')
-  conv2 = utilities.conv_layer(conv1, [3,3,8,16], filter_padding='SAME', name_suffix='2')
+  conv1 = utilities.conv_layer(x_4d, [3,3,1,8], padding='SAME', name_suffix='1')
+  conv2 = utilities.conv_layer(conv1, [3,3,8,16], padding='SAME', name_suffix='2')
 
   print("conv1 Shape: %s" % conv1.get_shape())
   print("conv2 Shape: %s" % conv2.get_shape())

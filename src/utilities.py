@@ -106,16 +106,16 @@ def reshape(x, shape):
     reshaped = tf.reshape(x, shape) 
   return reshaped
 
-def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
+def conv_layer(x, shape, strides=[1,1,1,1], standard_deviation=0.1, padding='SAME', name_suffix='1', act=tf.nn.relu):
   """ Reusable code for making a convolutional neural net layer.
       It applies a convoltion to the input
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
 
       Arguments:
         x: the tensor which must travel through the layer. The tensor must have shape: [batch, in_height, in_width, in_channels]
-        kernel_shape: an array describing the shape of the kernel: [filter_height, filter_width, in_channels, out_channels]
-        filter_strides: an array describing how often the filter is applied: [1, stride_horizontal, stride_verticle, 1].
-        filter_padding: the padding scheme applied by the convolutinal filter see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
+        shape: an array describing the shape of the kernel: [filter_height, filter_width, in_channels, out_channels]
+        strides: an array describing how often the filter is applied: [1, stride_horizontal, stride_verticle, 1].
+        padding: the padding scheme applied by the convolutinal filter see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
         act: the activation function to be applied to the output tensor before it is returned. The default is ReLU.
       
@@ -125,13 +125,13 @@ def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1]
   layer_name = 'conv_' + name_suffix
   with tf.variable_scope(layer_name) as scope:
     with tf.name_scope('kernel'):
-      kernel = tn_weight_variable(kernel_shape, standard_deviation)
+      kernel = tn_weight_variable(shape, standard_deviation)
       variable_summaries(kernel, layer_name + '/kernel') 
     with tf.name_scope('biases'):
-      biases = bias_variable([kernel_shape[3]])
+      biases = bias_variable([shape[3]])
       variable_summaries(biases, layer_name + '/biases')   
     with tf.name_scope('convolution_and_bias'):   
-      preactivate = tf.nn.conv2d(x, kernel, filter_strides, padding=filter_padding)
+      preactivate = tf.nn.conv2d(x, kernel, strides, padding=padding)
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
     activations = act(preactivate, 'activation')
     tf.histogram_summary(layer_name + '/activations', activations)
