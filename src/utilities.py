@@ -169,7 +169,7 @@ def calculate_cross_entropy(y, y_, name_suffix='1'):
   """
   # computes cross entropy between trained y and label y_
   with tf.name_scope('cross_entropy_'+name_suffix):
-    diff = y_ * tf.log(y)
+    diff = y_ * tf.log(y + 1e-10)
     with tf.name_scope('total'):
       cross_entropy = -tf.reduce_mean(diff)
     tf.scalar_summary('cross_entropy_'+name_suffix, cross_entropy)
