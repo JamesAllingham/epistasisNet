@@ -137,6 +137,27 @@ def conv_layer(x, shape, strides=[1,1,1,1], standard_deviation=0.1, padding='SAM
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
+def pool_layer(x, shape=[1,3,3,1], strides=[1,1,1,1], padding='SAME', name_suffix='1'):
+  """ Reusable code for making a convolutional neural net layer.
+      It applies a convoltion to the input
+      It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
+
+      Arguments:
+        x: the tensor which must travel through the layer. The tensor must have shape: [batch, in_height, in_width, in_channels]
+        shape: an array describing the shape of the kernel: [1, width, height, 1]
+        strides: an array describing how often the pooling is applied: [1, stride_horizontal, stride_verticle, 1].
+        padding: the padding scheme applied by the pooling layer see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+      
+      Returns:
+        the result of passing the input tensor through the pooling layer.
+  """
+  layer_name = 'pool_' + name_suffix
+  with tf.variable_scope(layer_name) as scope:
+    with tf.name_scope('max_pooling'):
+      pooled = tf.nn.max_pool(x, shape, strides, padding)
+    return pooled 
+
 def dropout(x):
   """ Apply dropout to a neural network layer.
       This is done to prevent over fitting.
