@@ -92,7 +92,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=t
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
-def reshape(x, shape):
+def reshape(x, shape, name_suffix='1'):
   """ Reshapes an input tensor to the given shape.
 
       Arguments:
@@ -102,7 +102,7 @@ def reshape(x, shape):
       Returns:
         a reshaped tensor.
   """
-  with tf.name_scope('reshape'):
+  with tf.name_scope('reshape_'+name_suffix):
     reshaped = tf.reshape(x, shape) 
   return reshaped
 
