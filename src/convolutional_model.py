@@ -51,12 +51,12 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
   print("conv1 Shape: %s" % conv1.get_shape())
   print("conv2 Shape: %s" % conv2.get_shape())
 
-  flatten = utilities.reshape(conv2, [-1, 3*100*16])
+  flatten = utilities.reshape(conv3, [-1, 3*100*16], name_suffix='2')
 
   print("flatten Shape: %s" % flatten.get_shape())
   
-  hidden1 = utilities.fc_layer(flatten, 4800, 1000, layer_name='hidden1')
-  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden2')
+  hidden1 = utilities.fc_layer(flatten, 4800, 1000, layer_name='hidden_1')
+  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
 
   print("hidden1 Shape: %s" % hidden1.get_shape())
   print("hidden2 Shape: %s" % hidden2.get_shape())
@@ -69,7 +69,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
   print("y1 Shape: %s" % y1.get_shape())
 
-  y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2])
+  y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
 
   print("y2 Shape: %s" % y2.get_shape())
 
