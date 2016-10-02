@@ -1,7 +1,7 @@
+import numpy as np
+
 import data_batcher
 import data_loader
-
-import numpy as np
 
 class DataHolder:
     
