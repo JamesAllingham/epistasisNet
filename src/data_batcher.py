@@ -1,4 +1,4 @@
-from sys import exit
+import sys
 import numpy as np
 
 class DataBatcher:
@@ -12,21 +12,21 @@ class DataBatcher:
 
         if self.__data_size != self.__y1.shape[0]:
             print("The input and output sets must have the same number of entries")
-            exit(2)
+            sys.exit(2)
 
         if self.__y2.shape[0] != self.__y1.shape[0]:
             print("The output sets must have the same number of entries")
-            exit(2)
+            sys.exit(2)
 
     def next_batch(self, batch_size):
         # If the caller wants all of the data simply return the whole data set as a triple
         if batch_size is None:
             return (self.__x, self.__y1, self.__y2)
-
+        
         if batch_size > self.__data_size:
             print("Please specify a batch size less than the number of entries in the data set")
-            exit(2)
-            
+            sys.exit(2)
+
         if batch_size + self.__batch_cursor < self.__data_size:
             # If the batch size is less than the number of entries left in the data:
             # Take the next batch size number of elements and move the cursor forwards.
@@ -45,7 +45,7 @@ class DataBatcher:
             y2 = np.concatenate((y2, self.__y2[0:number_still_required]))
             self.__batch_cursor = number_still_required
 
-            return (x, y1, y2)
+        return (x, y1, y2)
 
     def get_input_shape(self):
         return self.__x.shape
