@@ -4,3 +4,4 @@ MDR/*
 *.txt
 *.pyc
 BEAM/*
+*.json
