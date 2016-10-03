@@ -45,18 +45,18 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
   print("x_4d_ Shape: %s" %  x_4d.get_shape())
 
-  conv1 = utilities.conv_layer(x_4d, [3,3,1,8], filter_padding='SAME', name_suffix='1')
-  conv2 = utilities.conv_layer(conv1, [3,3,8,16], filter_padding='SAME', name_suffix='2')
+  conv1 = utilities.conv_layer(x_4d, [3,3,1,8], padding='SAME', name_suffix='1')
+  conv2 = utilities.conv_layer(conv1, [3,3,8,16], padding='SAME', name_suffix='2')
 
   print("conv1 Shape: %s" % conv1.get_shape())
   print("conv2 Shape: %s" % conv2.get_shape())
 
-  flatten = utilities.reshape(conv2, [-1, 3*100*16])
+  flatten = utilities.reshape(conv3, [-1, 3*100*16], name_suffix='2')
 
   print("flatten Shape: %s" % flatten.get_shape())
   
-  hidden1 = utilities.fc_layer(flatten, 4800, 1000, layer_name='hidden1')
-  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden2')
+  hidden1 = utilities.fc_layer(flatten, 4800, 1000, layer_name='hidden_1')
+  hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
 
   print("hidden1 Shape: %s" % hidden1.get_shape())
   print("hidden2 Shape: %s" % hidden2.get_shape())
@@ -69,7 +69,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
   print("y1 Shape: %s" % y1.get_shape())
 
-  y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2])
+  y2 = utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
 
   print("y2 Shape: %s" % y2.get_shape())
 
@@ -143,7 +143,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
     saver.restore(sess, save_path)
 
-    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, batch_size, test_batch_size))
+    best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
     print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 

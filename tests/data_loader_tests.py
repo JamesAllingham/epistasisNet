@@ -24,11 +24,13 @@ class BaseDataLoaderTestCase(unittest.TestCase):
         file.close()
 
         self.dl = data_loader.DataLoader("tmp.txt", 0.8, 0.75)
-        remove("tmp.txt")
 
         self.dl.convert_data_to_1_hot()
 
         self.dl.split_data()
+
+    def tearDown(self):
+        remove("tmp.txt")
 
 class GetInputDataTestCase(BaseDataLoaderTestCase):
 

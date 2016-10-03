@@ -1,6 +1,8 @@
 *.jar
 MDR/*
 *.npy
+*.npz
 *.txt
 *.pyc
 BEAM/*
+*.json

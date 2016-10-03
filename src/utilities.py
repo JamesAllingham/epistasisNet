@@ -92,7 +92,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=t
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
 
-def reshape(x, shape):
+def reshape(x, shape, name_suffix='1'):
   """ Reshapes an input tensor to the given shape.
 
       Arguments:
@@ -102,20 +102,20 @@ def reshape(x, shape):
       Returns:
         a reshaped tensor.
   """
-  with tf.name_scope('reshape'):
+  with tf.name_scope('reshape_'+name_suffix):
     reshaped = tf.reshape(x, shape) 
   return reshaped
 
-def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1], filter_padding='SAME', name_suffix='1', act=tf.nn.relu):
+def conv_layer(x, shape, strides=[1,1,1,1], standard_deviation=0.1, padding='SAME', name_suffix='1', act=tf.nn.relu):
   """ Reusable code for making a convolutional neural net layer.
       It applies a convoltion to the input
       It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
 
       Arguments:
         x: the tensor which must travel through the layer. The tensor must have shape: [batch, in_height, in_width, in_channels]
-        kernel_shape: an array describing the shape of the kernel: [filter_height, filter_width, in_channels, out_channels]
-        filter_strides: an array describing how often the filter is applied: [1, stride_horizontal, stride_verticle, 1].
-        filter_padding: the padding scheme applied by the convolutinal filter see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
+        shape: an array describing the shape of the kernel: [filter_height, filter_width, in_channels, out_channels]
+        strides: an array describing how often the filter is applied: [1, stride_horizontal, stride_verticle, 1].
+        padding: the padding scheme applied by the convolutinal filter see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
         act: the activation function to be applied to the output tensor before it is returned. The default is ReLU.
       
@@ -125,17 +125,38 @@ def conv_layer(x, kernel_shape, standard_deviation=0.1, filter_strides=[1,1,1,1]
   layer_name = 'conv_' + name_suffix
   with tf.variable_scope(layer_name) as scope:
     with tf.name_scope('kernel'):
-      kernel = tn_weight_variable(kernel_shape, standard_deviation)
+      kernel = tn_weight_variable(shape, standard_deviation)
       variable_summaries(kernel, layer_name + '/kernel') 
     with tf.name_scope('biases'):
-      biases = bias_variable([kernel_shape[3]])
+      biases = bias_variable([shape[3]])
       variable_summaries(biases, layer_name + '/biases')   
     with tf.name_scope('convolution_and_bias'):   
-      preactivate = tf.nn.conv2d(x, kernel, filter_strides, padding=filter_padding)
+      preactivate = tf.nn.conv2d(x, kernel, strides, padding=padding)
       tf.histogram_summary(layer_name + '/pre_activations', preactivate)
     activations = act(preactivate, 'activation')
     tf.histogram_summary(layer_name + '/activations', activations)
     return activations
+
+def pool_layer(x, shape=[1,3,3,1], strides=[1,1,1,1], padding='SAME', name_suffix='1'):
+  """ Reusable code for making a convolutional neural net layer.
+      It applies a convoltion to the input
+      It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
+
+      Arguments:
+        x: the tensor which must travel through the layer. The tensor must have shape: [batch, in_height, in_width, in_channels]
+        shape: an array describing the shape of the kernel: [1, width, height, 1]
+        strides: an array describing how often the pooling is applied: [1, stride_horizontal, stride_verticle, 1].
+        padding: the padding scheme applied by the pooling layer see: https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html#convolution for more details.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+      
+      Returns:
+        the result of passing the input tensor through the pooling layer.
+  """
+  layer_name = 'pool_' + name_suffix
+  with tf.variable_scope(layer_name) as scope:
+    with tf.name_scope('max_pooling'):
+      pooled = tf.nn.max_pool(x, shape, strides, padding)
+    return pooled 
 
 def dropout(x):
   """ Apply dropout to a neural network layer.
@@ -169,7 +190,7 @@ def calculate_cross_entropy(y, y_, name_suffix='1'):
   """
   # computes cross entropy between trained y and label y_
   with tf.name_scope('cross_entropy_'+name_suffix):
-    diff = y_ * tf.log(y)
+    diff = y_ * tf.log(y + 1e-10)
     with tf.name_scope('total'):
       cross_entropy = -tf.reduce_mean(diff)
     tf.scalar_summary('cross_entropy_'+name_suffix, cross_entropy)

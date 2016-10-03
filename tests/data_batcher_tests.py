@@ -62,7 +62,7 @@ class InputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
         x, _, _ = self.db.next_batch(5)
         self.assertEqual(x[0,0], 0)
 
-class OutputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
+class Output1BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
 
     def runTest(self):
         _, y1, _ = self.db.next_batch(5)
@@ -72,7 +72,7 @@ class OutputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
         _, y1, _ = self.db.next_batch(5)
         self.assertEqual(y1[0,0], 0)
 
-class OutputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
+class Output2BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
 
     def runTest(self):
         _, _, y2 = self.db.next_batch(5)
@@ -81,6 +81,16 @@ class OutputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
         self.assertEqual(y2[0,0], 5)
         _, _, y2 = self.db.next_batch(5)
         self.assertEqual(y2[0,0], 0)
+
+class IfBatchSizeIsNoneReturnAllDataTestCase(BaseDataBatcherTestCase):
+
+    def runTest(self):
+        _, _, y2 = self.db.next_batch(None)
+        self.assertEqual(y2.shape[0], 10)
+        _, y1, _ = self.db.next_batch(None)
+        self.assertEqual(y1.shape[0], 10)
+        x, _, _ = self.db.next_batch(None)
+        self.assertEqual(x.shape[0], 10)
         
 if __name__ == "__main__":
     unittest.main() 
