@@ -6,10 +6,10 @@ import numpy as np
 
 class DataLoader(object):
 
-    def __init__(self, file_name_and_path, test_train_ratio, train_valid_ratio):
+    def __init__(self, file_name_and_path, test_train_ratio, valid_train_ratio):
         self.__path = file_name_and_path
         self.__test_train_ratio = test_train_ratio
-        self.__train_valid_ratio = train_valid_ratio
+        self.__valid_train_ratio = valid_train_ratio
 
         # Read the data file, and get the numer of rows and collumns
         data = np.genfromtxt(file_name_and_path, dtype='intc', skip_header=1)
@@ -79,7 +79,7 @@ class DataLoader(object):
                                      int(math.ceil(self.__test_train_ratio*self.__num_samples)))
         # Now split those indices into training and validation
         training_indices = sample(not_testing_indices,
-                                  int(math.ceil(self.__train_valid_ratio*len(not_testing_indices))))
+                                  int(math.ceil(self.__valid_train_ratio*len(not_testing_indices))))
         shuffle(training_indices) # does this actually do anything?
         self.__training_x = self.__x_1_hot[training_indices]
         self.__training_y_1 = self.__y_1_hot_1[training_indices]
