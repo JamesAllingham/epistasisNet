@@ -56,7 +56,7 @@ class ReadBinaryTestCase(BaseDataHolderTestCase):
         self.dh.write_to_binary("tmp2")
 
         dh2 = data_holder.DataHolder()
-        dh2.read_from_binary("tmp2.npz")
+        dh2.read_from_npz("tmp2.npz")
 
         self.assertIsInstance(dh2.get_testing_data(), data_batcher.DataBatcher)
         self.assertIsInstance(dh2.get_training_data(), data_batcher.DataBatcher)

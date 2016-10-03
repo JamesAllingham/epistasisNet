@@ -185,7 +185,7 @@ def main(args):
                 sys.exit(2)
     else:
         try:
-            dh.read_from_binary(FLAGS.file_in)
+            dh.read_from_npz(FLAGS.file_in)
         except Exception as excep:
             print("Unable to read from binary file: %s" % FLAGS.file_in)
             print(excep)
