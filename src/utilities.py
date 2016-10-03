@@ -231,8 +231,10 @@ def calculate_accuracy (y, y_, snps_to_check=0, name_suffix='1'):
     if snps_to_check != 0:
       # split y
       y_left, y_right = tf.split(2, 2, y, name = 'split')
+      # transpose as top_k runs on rows not columns
+      y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
       # get k many max values
-      values, indices = tf.nn.top_k(y, snps_to_check, name='snp_probabilities')
+      values, indices = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
       # get smallest value as a 0D tensor
       min_value = tf.reduce_min(values, name='find_min_snp')
       # create tensor of smallest snp value same size as y_left
@@ -249,6 +251,44 @@ def calculate_accuracy (y, y_, snps_to_check=0, name_suffix='1'):
       accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     tf.scalar_summary('accuracy_'+name_suffix, accuracy)
   return accuracy
+
+def calculate_accuracy_test (y, y_, snps_to_check=0, name_suffix='1'):
+  """ Compares the output of the neural network with the expected output and returns the accuracy.
+
+      Arguments:
+        y: the given output tensor.
+        y_: the expected output tensor.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
+
+      Returns:
+        a scalar describing the accuracy of the given output when compared with the expected output.
+  """
+  # check for whether model has correctly predicted the snps causing epi
+  with tf.name_scope('accuracy_'+name_suffix):
+    if snps_to_check != 0:
+      # split y
+      y_left, y_right = tf.split(2, 2, y, name = 'split')
+      # print(' y_left: %s' % y_left.get_shape())
+      y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
+      # print(' y_left_t: %s' % y_left_t.get_shape())
+      # get k many max values
+      values, indices = tf.nn.top_k(y_left_t  , snps_to_check, name='snp_probabilities')
+      # get smallest value as a 0D tensor
+      min_value = tf.reduce_min(values, reduction_indices=1, name='find_min_snp')
+      # create tensor of smallest snp value same size as y_left
+      ones_tensor = tf.ones([y.get_shape()[1], 1], tf.float32)
+      min_value_tensor = tf.mul(ones_tensor, min_value)
+      # compare all snps with that of min_value_tensor to find which have been predicted
+      predicted_snps = tf.greater_equal(y_left, min_value_tensor, name='predicted_snps')
+      # create mirrored tensor and concat together (needs to be in bool for xor), then cast to 1s and 0s
+      y = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
+      print('y: %s' % y.get_shape())
+      with tf.name_scope('correct_prediction'):
+        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+      with tf.name_scope('accuracy'):
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+      tf.scalar_summary('accuracy_'+name_suffix, accuracy)
+      return accuracy, values, min_value
 
 def variable_summaries(var, name):
   """ Attach min, max, mean, and standard deviation summaries to a variable.
