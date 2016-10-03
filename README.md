@@ -1,7 +1,7 @@
 epistasisNet
 ============
 
-#Deep Learning to Detect Epistasis in the Human Genome
+#Deep learning to detect gene-gene interactions
 
 ELEN4002/4012 Project by James Allingham and Paul Cresswell. Supervised by Prof. Scott Hazelhurst.
 
