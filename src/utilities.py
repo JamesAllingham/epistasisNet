@@ -48,19 +48,6 @@ def bias_variable(shape):
 
 # # nn utilities
 
-def identity(x, name):  
-  """ identity function that can be used as the activation function of the fc_layer function to create a linear layer.
-
-      Arguments:
-        x: the tensor which must be 'activated'. 
-        name: the scope name for the graph visualization.
-
-      Returns:
-        the 'activated' tensor.
-  """
-  with tf.name_scope(name):
-    return x
-
 def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=tf.nn.relu):
   """ Reusable code for making a hidden neural net layer.
       It does a matrix multiply, bias add, and then adds a nonlinearity.
