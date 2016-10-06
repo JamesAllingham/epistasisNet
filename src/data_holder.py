@@ -1,4 +1,4 @@
-"""This module provides a single class: DataHolder which manages reading of input files and storage of various data sets.
+"""This module provides a single class: DataHolder, which manages reading of input files and storage of various data sets.
 """
 
 import numpy as np
