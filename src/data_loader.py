@@ -155,7 +155,7 @@ class DataLoader(object):
             Nothing.
 
         Returns:
-            A triple containing (x, y1, y2).
+            A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__testing_x, self.__testing_y_1, self.__testing_y_2)
 
@@ -166,7 +166,7 @@ class DataLoader(object):
             Nothing.
 
         Returns:
-            A triple containing (x, y1, y2).
+            A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__training_x, self.__training_y_1, self.__training_y_2)
 
@@ -177,7 +177,7 @@ class DataLoader(object):
             Nothing.
 
         Returns:
-            A triple containing (x, y1, y2).
+            A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__validation_x, self.__validation_y_1, self.__validation_y_2)
 
@@ -188,7 +188,7 @@ class DataLoader(object):
             Nothing.
 
         Returns:
-            A triple containing (x, y1, y2).
+            A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__x_1_hot, self.__y_1_hot_1, self.__y_1_hot_2)
 
@@ -198,6 +198,6 @@ class DataLoader(object):
             Nothing.
 
         Returns:
-            A triple containing (x, y1, y2).
+            A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__x, self.__y_1, self.__y_2)
