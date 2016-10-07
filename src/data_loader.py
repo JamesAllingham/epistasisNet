@@ -68,8 +68,8 @@ class DataLoader(object):
         self.__y_1_hot_2 = np.zeros([self.__y_2.shape[0], self.__y_2.shape[1], 2])
         for (i, row) in enumerate(self.__y_2):
             for (j, cell) in enumerate(row):
-                self.__y_1_hot_2[i][j][0] = int(cell == 0)
-                self.__y_1_hot_2[i][j][1] = int(cell == 1)
+                self.__y_1_hot_2[i][j][0] = int(cell == 1)
+                self.__y_1_hot_2[i][j][1] = int(cell == 0)
 
     def split_data(self):
         seed(42)
