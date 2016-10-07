@@ -214,7 +214,7 @@ class Optimizer(Enum):
             3. Adadelta
             4. Adagrad
             5. RMSProp
-            6. Ftrl
+            6. Ftrl (only cpu compatible)
     """
     GradientDescent = 1
     Adam = 2
@@ -285,6 +285,9 @@ def calculate_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
 
         with tf.name_scope('correct_prediction'):
             correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+            # print("y: %s" % y.get_shape())
+            # print("y_: %s" % y_.get_shape())
+            # print("correct_prediction: %s" % correct_prediction.get_shape())
         with tf.name_scope('accuracy'):
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
@@ -296,38 +299,61 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
     Arguments:
         y: the given output tensor.
         y_: the expected output tensor.
+        snps_to_check: how many snps cause epi
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
 
     Returns:
         a scalar describing the accuracy of the given output when compared with the expected output.
     """
 
-  # check for whether model has correctly predicted the snps causing epi
+    # check for whether model has correctly predicted the snps causing epi
     with tf.name_scope('accuracy_'+name_suffix):
         if snps_to_check != 0:
             # split y
+            # print("y: %s" % y.get_shape())
+            y_trans = tf.transpose(y, perm=[0, 2, 1])
+            print("y: %s" % y.get_shape())
+            print("y_trans: %s" % y_trans.get_shape())
             y_left, _ = tf.split(2, 2, y, name='split')
-            # print(' y_left: %s' % y_left.get_shape())
             y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
-            # print(' y_left_t: %s' % y_left_t.get_shape())
+            print("y_left: %s" % y_left.get_shape())
+            print("y_left_t: %s" % y_left_t.get_shape())
             # get k many max values
-            values, _ = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
-            # get smallest value as a 0D tensor
-            min_value = tf.reduce_min(values, reduction_indices=1, name='find_min_snp')
+            values, indices = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
+            # apply same to y_
+            y__left, _ = tf.split(2, 2, y_, name='split')
+            y__left_t = tf.transpose(y__left, perm=[0, 2, 1])
+            values_y_, indices_y_ = tf.nn.top_k(y__left_t, snps_to_check, name='snp_probabilities')
+            # print("indices: %s" % indices.get_shape()) (?, 1, 2)
+            # reshaped_indices = tf.reshape(indices, [-1,2]) #tf.pack([tf.shape(indices)[0], 2]))
+            min_top_values = tf.slice(values, [0,0,snps_to_check-1], [-1,-1,snps_to_check-1])
+            reshaped_min_top_values = tf.reshape(min_top_values, [-1,1])
+            # print("y_left: %s" % y_left.get_shape())
+            # print("reshaped_min_top_values: %s" % reshaped_min_top_values.get_shape())
+            # get smallest value for each person to give a 1D tensor
+            # min_value = tf.reduce_min(values, name='find_min_snp')
+            # min_value_test_check = tf.reduce_min(values, reduction_indices=1, name='find_min_snp')
             # create tensor of smallest snp value same size as y_left
             ones_tensor = tf.ones([y.get_shape()[1], 1], tf.float32)
-            min_value_tensor = tf.mul(ones_tensor, min_value)
+            # min_value_tensor = tf.mul(ones_tensor, min_value)
+            # print("min_value_tensor: %s" % min_value_tensor.get_shape())
             # compare all snps with that of min_value_tensor to find which have been predicted
-            predicted_snps = tf.greater_equal(y_left, min_value_tensor, name='predicted_snps')
+            predicted_snps = tf.greater_equal(y_left, min_top_values, name='predicted_snps')
             # create mirrored tensor and concat together (needs to be in bool for xor), then cast to 1s and 0s
-            y = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
-            print('y: %s' % y.get_shape())
+            y_remade = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
+            # print('y: %s' % y.get_shape())
             with tf.name_scope('correct_prediction'):
-                correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+                # correct_prediction = tf.equal(y_remade, y_)
+                correct_prediction = tf.equal(tf.argmax(y_remade, 2), tf.argmax(y_, 2))
+                print("correct_prediction: %s" % correct_prediction.get_shape())
+                # print("y_remade: %s" % y_remade.get_shape())
+                # print("y_: %s" % y_.get_shape())
+                # print("correct_prediction: %s" % correct_prediction.get_shape())
+                # correct_prediction_left, _ = tf.split(2, 2, correct_prediction, name='split')
             with tf.name_scope('accuracy'):
                 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
-            return accuracy, values, min_value
+            return accuracy, y_left, y, indices
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
