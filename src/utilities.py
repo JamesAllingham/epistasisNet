@@ -282,6 +282,9 @@ def calculate_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
 
         with tf.name_scope('correct_prediction'):
             correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+            print("y: %s" % y.get_shape())
+            print("y_: %s" % y_.get_shape())
+            # print("correct_prediction: %s" % correct_prediction.get_shape())
         with tf.name_scope('accuracy'):
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
@@ -304,6 +307,7 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
     with tf.name_scope('accuracy_'+name_suffix):
         if snps_to_check != 0:
             # split y
+            # print("y: %s" % y.get_shape())
             y_left, _ = tf.split(2, 2, y, name='split')
             y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
             # get k many max values
@@ -311,8 +315,8 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             # reshaped_indices = tf.reshape(indices, [-1,2]) #tf.pack([tf.shape(indices)[0], 2]))
             min_top_values = tf.slice(values, [0,0,snps_to_check-1], [-1,-1,snps_to_check-1])
             reshaped_min_top_values = tf.reshape(min_top_values, [-1,1])
-            print("y_left: %s" % y_left.get_shape())
-            print("reshaped_min_top_values: %s" % reshaped_min_top_values.get_shape())
+            # print("y_left: %s" % y_left.get_shape())
+            # print("reshaped_min_top_values: %s" % reshaped_min_top_values.get_shape())
             # get smallest value for each person to give a 1D tensor
             # min_value = tf.reduce_min(values, name='find_min_snp')
             # min_value_test_check = tf.reduce_min(values, reduction_indices=1, name='find_min_snp')
@@ -326,11 +330,17 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             y_remade = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
             # print('y: %s' % y.get_shape())
             with tf.name_scope('correct_prediction'):
-                correct_prediction = tf.equal(tf.argmax(y_remade, 1), tf.argmax(y_, 1))
+                # correct_prediction = tf.equal(y_remade, y_)
+                correct_prediction = tf.equal(tf.argmax(y_remade, 2), tf.argmax(y_, 2))
+                print("correct_prediction: %s" % correct_prediction.get_shape())
+                # print("y_remade: %s" % y_remade.get_shape())
+                # print("y_: %s" % y_.get_shape())
+                # print("correct_prediction: %s" % correct_prediction.get_shape())
+                # correct_prediction_left, _ = tf.split(2, 2, correct_prediction, name='split')
             with tf.name_scope('accuracy'):
                 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
-            return accuracy, y_left, predicted_snps, y_remade
+            return accuracy, y_left, y_remade, correct_prediction
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
