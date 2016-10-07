@@ -61,15 +61,19 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     # Train the model, and also write summaries.
     # Every 10th step, measure test-set accuracy, and write test summaries
     # All other steps, run train_step on training data, & add training summaries
-    def feed_dict(train, train_batch_size, test_batch_size):
+    def feed_dict(train, train_batch_size, test_batch_size, print_y=False):
         """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
         """
         if train:
             xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
+            # print('y_ at step %s for output 2: %f' , y2s)
             k = dropout_rate
         else:
             xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
+            # print('y_ at step %s for output 2: %f' , y2s)
             k = 1.0
+            if print_y == True:
+                print('y_ at step %s for output 2: %f', y2s)
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
     with tf.Session() as sess:
@@ -87,15 +91,15 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         for i in range(max_steps):
       
             if i % 10 == 0:  # Record summaries and test-set accuracy
-                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
+                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens], feed_dict=feed_dict(False, train_batch_size, test_batch_size, True))
                 test_writer.add_summary(summary, i)
                 print('Accuracy at step %s for output 1: %f' % (i, acc1))
                 print('Accuracy at step %s for output 2: %f' % (i, acc2))
                 print('Cost at step %s for output 1: %f' % (i, cost1))
                 print('Cost at step %s for output 2: %f' % (i, cost2))
                 # print('values at step %s for output 2: %f', values_test)
-                print('min_top_values at step %s for output 2: %f' , any_value_test)
-                print('min_value_tens at step %s for output 2: %f' , min_tens_test)
+                print('y at step %s for output 2: %f' , any_value_test)
+                print('correct_prediction_left at step %s for output 2: %f' , min_tens_test)
 
                 # save the model every time a new best accuracy is reached
                 if sqrt(cost1**2 + cost2**2) <= best_cost:
