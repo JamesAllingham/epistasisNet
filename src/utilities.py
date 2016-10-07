@@ -282,8 +282,8 @@ def calculate_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
 
         with tf.name_scope('correct_prediction'):
             correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-            print("y: %s" % y.get_shape())
-            print("y_: %s" % y_.get_shape())
+            # print("y: %s" % y.get_shape())
+            # print("y_: %s" % y_.get_shape())
             # print("correct_prediction: %s" % correct_prediction.get_shape())
         with tf.name_scope('accuracy'):
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -308,10 +308,20 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
         if snps_to_check != 0:
             # split y
             # print("y: %s" % y.get_shape())
+            y_trans = tf.transpose(y, perm=[0, 2, 1])
+            print("y: %s" % y.get_shape())
+            print("y_trans: %s" % y_trans.get_shape())
             y_left, _ = tf.split(2, 2, y, name='split')
             y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
+            print("y_left: %s" % y_left.get_shape())
+            print("y_left_t: %s" % y_left_t.get_shape())
             # get k many max values
             values, indices = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
+            # apply same to y_
+            y__left, _ = tf.split(2, 2, y_, name='split')
+            y__left_t = tf.transpose(y__left, perm=[0, 2, 1])
+            values_y_, indices_y_ = tf.nn.top_k(y__left_t, snps_to_check, name='snp_probabilities')
+            # print("indices: %s" % indices.get_shape()) (?, 1, 2)
             # reshaped_indices = tf.reshape(indices, [-1,2]) #tf.pack([tf.shape(indices)[0], 2]))
             min_top_values = tf.slice(values, [0,0,snps_to_check-1], [-1,-1,snps_to_check-1])
             reshaped_min_top_values = tf.reshape(min_top_values, [-1,1])
@@ -340,7 +350,7 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             with tf.name_scope('accuracy'):
                 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
-            return accuracy, y_left, y_remade, correct_prediction
+            return accuracy, y_left, y, indices
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
