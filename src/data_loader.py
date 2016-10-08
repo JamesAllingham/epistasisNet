@@ -1,3 +1,6 @@
+"""This module provides a single class: DataLoader, which manages reading of raw data and formatting is appropriately.
+"""
+
 import math
 from random import sample, seed, shuffle
 
@@ -5,8 +8,28 @@ import numpy as np
 
 
 class DataLoader(object):
+    """A class which loads data from .txt files.
+
+    It also formats data into 1-hot and splits data into training, testing, and validation sets.
+    """
 
     def __init__(self, file_name_and_path, test_train_ratio, valid_train_ratio):
+        """Creates a DataLoader
+
+        It reads from the given file and splits the data into x, y1 and y2.
+
+        Data members for the file path, test-train ratio, and validation-train ratio are initilised with the given values.
+
+        All other data memberr varibles are initialised to None.
+
+        Arguments:
+            file_name_and_path: A string describing the file name (and relative path) of the .txt file to read.
+            test_train_ratio: A float describing how much of the data to use for training and how much to use for testing.
+            valid_train_ratio: A float describing how much of the training data to use for actual training and how much to use for validation.
+
+        Returns:
+            A DataLoader object.
+        """
         self.__path = file_name_and_path
         self.__test_train_ratio = test_train_ratio
         self.__valid_train_ratio = valid_train_ratio
@@ -48,6 +71,14 @@ class DataLoader(object):
 
 
     def convert_data_to_1_hot(self):
+        """Converts the x, y1, and y2 data read from the .txt file to a 1-hot encoding.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
         # We want the data to be in a 1-hot format indicating whether the SNP is
         # double major, major-minor, or double minor
         # To do this we iterate through the data and for each element, we create a new 1-hot array
@@ -72,6 +103,14 @@ class DataLoader(object):
                 self.__y_1_hot_2[i][j][1] = int(cell == 0)
 
     def split_data(self):
+        """Splits the data set into three smaller data sets for training, testing and validation.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
         seed(42)
         # We now want to split the data into training, validation and testing sets
         # We randomly choose a number of training/validation indices
@@ -110,16 +149,55 @@ class DataLoader(object):
                   %(len(self.__validation_y_1), sum(self.__validation_y_1[:, 1]), np.mean(self.__validation_y_1[:, 1])*100))
 
     def get_testing_data(self):
+        """Returns a protion of the 1-hot data to be used for testing. This portion is based on the test-train ratio that the DataLoader was initialised with.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            A triple containing (x, y1, y2). Each element is a numpy array.
+        """
         return (self.__testing_x, self.__testing_y_1, self.__testing_y_2)
 
     def get_training_data(self):
+        """Returns a protion of the 1-hot data to be used for training. This portion is based on the test-train ratio that the DataLoader was initialised with.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            A triple containing (x, y1, y2). Each element is a numpy array.
+        """
         return (self.__training_x, self.__training_y_1, self.__training_y_2)
 
     def get_validation_data(self):
+        """Returns a protion of the 1-hot data to be used for validation. This portion is based on the test-train ratio that the DataLoader was initialised with.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            A triple containing (x, y1, y2). Each element is a numpy array.
+        """
         return (self.__validation_x, self.__validation_y_1, self.__validation_y_2)
 
     def get_1_hot_data(self):
+        """Returns all of the 1-hot encoded data.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            A triple containing (x, y1, y2). Each element is a numpy array.
+        """
         return (self.__x_1_hot, self.__y_1_hot_1, self.__y_1_hot_2)
 
     def get_data(self):
+        """Returns all of the input data.
+        Arguments:
+            Nothing.
+
+        Returns:
+            A triple containing (x, y1, y2). Each element is a numpy array.
+        """
         return (self.__x, self.__y_1, self.__y_2)
