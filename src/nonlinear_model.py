@@ -36,16 +36,16 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
   
     x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
-    print("x: %s" % x.get_shape())
-    print("x_flat: %s" % x_flat.get_shape())
+    # print("x: %s" % x.get_shape())
+    # print("x_flat: %s" % x_flat.get_shape())
 
     hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 1000, layer_name='hidden_1')
     hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
-    print("hidden1: %s" % hidden1.get_shape())
-    print("hidden2: %s" % hidden2.get_shape())
+    # print("hidden1: %s" % hidden1.get_shape())
+    # print("hidden2: %s" % hidden2.get_shape())
 
     dropped, keep_prob = utilities.dropout(hidden2)
-    print("dropped: %s" % dropped.get_shape())
+    # print("dropped: %s" % dropped.get_shape())
 
     y1 = utilities.fc_layer(dropped, 500, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
     # y2 = tf.transpose(dropped, perm=[0, 2, 1])
@@ -78,7 +78,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
             xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
             # print('y_ at step %s for output 2: %f' , y2s)
             k = 1.0
-            # if print_y == True:
+            # if print_y:
             #     print('y_ at step %s for output 2: %f', y2s)
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
@@ -104,7 +104,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 print('Cost at step %s for output 1: %f' % (i, cost1))
                 print('Cost at step %s for output 2: %f' % (i, cost2))
                 # print('values at step %s for output 2: %f', values_test)
-                print('y at step %s for output 2: %f' , any_value_test)
+                # print('y at step %s for output 2: %f' , any_value_test)
                 print('indices at step %s for output 2: %f', min_tens_test)
 
                 # save the model every time a new best accuracy is reached
