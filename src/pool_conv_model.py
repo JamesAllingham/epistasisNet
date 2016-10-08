@@ -39,7 +39,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    x_4d = utilities.reshape(x, [-1, 1000, 3, 1], name_suffix='1')
+    x_4d = utilities.reshape(x, [-1, num_cols_in, 3, 1], name_suffix='1')
 
     print("x_4d Shape: %s" % x_4d.get_shape())
 
@@ -64,17 +64,21 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     pool3 = utilities.pool_layer(conv3, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='3')
 
     print("conv3 Shape: %s" % conv3.get_shape())
+    print("pool3 Shape: %s" % pool3.get_shape())
 
-    flatten = utilities.reshape(pool3, [-1, 4000], name_suffix='2')
+    final_shape = pool3.get_shape()
+    flatten_size = int(final_shape[1]*final_shape[2]*final_shape[3])
+    print(flatten_size)
+    flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
-    hidden1 = utilities.fc_layer(flatten, 4000, 2000, layer_name='hidden1')
-    hidden2 = utilities.fc_layer(hidden1, 2000, 1000, layer_name='hidden2')
+    hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden1')
+    hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden2')
 
     dropped, keep_prob = utilities.dropout(hidden2)
 
-    y1 = utilities.fc_layer(dropped, 1000, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+    y1 = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
-    y2 = utilities.reshape(utilities.fc_layer(dropped, 1000, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
+    y2 = utilities.reshape(utilities.fc_layer(dropped, int(flatten_size/4), num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
 
     loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
     loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
@@ -148,7 +152,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
         saver.restore(sess, save_path)
 
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
+        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None, None))
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
@@ -172,21 +176,21 @@ def main(args):
     if not FLAGS.read_binary:
         try:
             dh.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from text file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
         if FLAGS.write_binary:
             try:
                 dh.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
-            except Exception as excep:
+            except IOError as excep:
                 print("Unable to write to binary file")
                 print(excep)
                 sys.exit(2)
     else:
         try:
             dh.read_from_npz(FLAGS.file_in)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from binary file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
