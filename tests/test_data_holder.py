@@ -15,7 +15,7 @@ class BaseDataHolderTestCase(unittest.TestCase):
     """Provides set up and tear down functions which can be inherited by other test case classes for the DataHolder."""
 
     def setUp(self):
-        """Sets up a DataLoader object initialised with a data set containing 100 samples.
+        """Sets up a DataHolder object initialised with a data set containing 100 samples.
 
         Also creates a temporary text file from which to read the data.
 
