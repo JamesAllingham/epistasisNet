@@ -92,6 +92,39 @@ class IfBatchSizeIsNoneReturnAllDataTestCase(BaseDataBatcherTestCase):
         self.assertEqual(y1.shape[0], 10)
         x, _, _ = self.db.next_batch(None)
         self.assertEqual(x.shape[0], 10)
+
+class EpochNumberIsCorrectlyReturnedWhenTakingPartialBatches(BaseDataBatcherTestCase):
+
+    def runTest(self):
+        self.assertEqual(0, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(0, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(1, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(1, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(2, self.db.get_num_epochs())
+
+class EpochNumberIsCorrectlyReturnedWhenTakingFullBatches(BaseDataBatcherTestCase):
+
+    def runTest(self):
+        self.assertEqual(0, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(None)
+        self.assertEqual(1, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(None)
+        self.assertEqual(2, self.db.get_num_epochs())
+
+class EpochNumberIsCorrectlyReturnedWhenTakingMixedBatches(BaseDataBatcherTestCase):
+
+    def runTest(self):
+        self.assertEqual(0, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(0, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(None)
+        self.assertEqual(1, self.db.get_num_epochs())
+        _, _, _ = self.db.next_batch(5)
+        self.assertEqual(2, self.db.get_num_epochs())
         
 if __name__ == "__main__":
     unittest.main() 
