@@ -165,20 +165,21 @@ def pool_layer(x, shape=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name
             pooled = tf.nn.max_pool(x, shape, strides, padding)
         return pooled
 
-def dropout(x):
+def dropout(x, name_suffix='1'):
     """Apply dropout to a neural network layer.
     This is done to prevent over fitting.
 
     Arguments:
         x: the tensor which must have dropout applied to it.
+        name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
 
     Returns:
         a dropped out version of the input tensor.
     """
     # Need to instantiate keep_prob here to correctly make the graph visualization
-    with tf.name_scope('dropout'):
+    with tf.name_scope('dropout_'+name_suffix):
         keep_prob = tf.placeholder(tf.float32)
-        tf.scalar_summary('dropout_keep_probability', keep_prob)
+        #tf.scalar_summary('dropout_keep_probability', keep_prob)
         dropped = tf.nn.dropout(x, keep_prob, seed=42)
     return dropped, keep_prob
 
