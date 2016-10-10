@@ -12,12 +12,12 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('file_in', '', 'data in file location')
 flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
-flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
+flags.DEFINE_integer('max_steps', 1000, 'maximum steps')
 flags.DEFINE_integer('batch_size', 100, 'training batch size')
 flags.DEFINE_integer('test_batch_size', 1000, 'testing batch size')
 flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
-flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
+flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout')
 flags.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
 flags.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a binary file.')
 flags.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
@@ -72,9 +72,10 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
     hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden1')
+
     hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden2')
 
-    dropped, keep_prob = utilities.dropout(hidden2)
+    dropped, keep_prob = utilities.dropout(hidden2, name_suffix='1')
 
     y1 = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
@@ -82,9 +83,10 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
     loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
     loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
+    with tf.name_scope('combine_loss'):
+        combined_loss = tf.add(loss1, loss2)
 
-    train_step1 = utilities.train(learning_rate, loss1, training_method=utilities.Optimizer.Adam, name_suffix='1')
-    train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
+    train_step1 = utilities.train(learning_rate, combined_loss, training_method=utilities.Optimizer.Adam, name_suffix='1')
 
     accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
     accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
@@ -139,12 +141,12 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 if i % 100 == 99:  # Record execution stats
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
+                    summary, _ = sess.run([merged, train_step1], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
                     train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
                     train_writer.add_summary(summary, i)
                     print('Adding run metadata for', i)
                 else:  # Record a summary
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
+                    summary, _ = sess.run([merged, train_step1], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
                     train_writer.add_summary(summary, i)
 
         train_writer.close()
