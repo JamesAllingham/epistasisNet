@@ -46,34 +46,20 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
     x_4d = utilities.reshape(x, [-1, num_cols_in, 3, 1], name_suffix='1')
 
-    print("x_4d Shape: %s" % x_4d.get_shape())
-
     conv1 = utilities.conv_layer(x_4d, [3, 3, 1, 8], padding='SAME', name_suffix='1')
-
-    print("conv1 Shape: %s" % conv1.get_shape())
 
     pool1 = utilities.pool_layer(conv1, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='1')
 
-    print("pool1 Shape: %s" % pool1.get_shape())
-
     conv2 = utilities.conv_layer(pool1, [3, 3, 8, 16], padding='SAME', name_suffix='2')
 
-    print("conv2 Shape: %s" % conv2.get_shape())
-
     pool2 = utilities.pool_layer(conv2, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='2')
-
-    print("pool2 Shape: %s" % pool2.get_shape())
 
     conv3 = utilities.conv_layer(pool2, [1, 3, 16, 32], padding='VALID', name_suffix='3')
 
     pool3 = utilities.pool_layer(conv3, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='3')
 
-    print("conv3 Shape: %s" % conv3.get_shape())
-    print("pool3 Shape: %s" % pool3.get_shape())
-
     final_shape = pool3.get_shape()
     flatten_size = int(final_shape[1]*final_shape[2]*final_shape[3])
-    print(flatten_size)
     flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
     hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden1')
