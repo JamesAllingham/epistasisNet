@@ -28,6 +28,7 @@ class DataBatcher(object):
         self.__y2 = y2
         self.__batch_cursor = 0
         self.__data_size = self.__x.shape[0]
+        self.__num_epochs = 0
 
         if self.__data_size != self.__y1.shape[0]:
             print("The input and output sets must have the same number of entries")
@@ -48,6 +49,7 @@ class DataBatcher(object):
         """
         # If the caller wants all of the data simply return the whole data set as a triple
         if batch_size is None:
+            self.__num_epochs += 1
             return (self.__x, self.__y1, self.__y2)
 
         if batch_size > self.__data_size:
@@ -71,6 +73,7 @@ class DataBatcher(object):
             y1_batch = np.concatenate((y1_batch, self.__y1[0:number_still_required]))
             y2_batch = np.concatenate((y2_batch, self.__y2[0:number_still_required]))
             self.__batch_cursor = number_still_required
+            self.__num_epochs += 1
 
         return (x_batch, y1_batch, y2_batch)
 
@@ -106,3 +109,14 @@ class DataBatcher(object):
             An n-tuple containing the integer dimension sizes of the output 2 data.
         """
         return self.__y2.shape
+
+    def get_num_epochs(self):
+        """Returns the number of epochs of data that have been batched.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            An integer number of epochs.
+        """
+        return self.__num_epochs
