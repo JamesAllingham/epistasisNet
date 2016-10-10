@@ -309,6 +309,8 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
     # check for whether model has correctly predicted the snps causing epi
     with tf.name_scope('accuracy_'+name_suffix):
         if snps_to_check != 0:
+
+            ########################################## 
             # 50 percent certainty for confidence check
             point_five = tf.constant([0.5])
             # get yes/no labels
@@ -329,7 +331,7 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             # gather indexes of the epi snp indices in the cases
             epi_snp_indices = tf.gather(labels_indices, greatest_indices_labels_left)
             # reshape from a 5D tensor to a manageable 2D tensor
-            reshaped_epi_snp_indices = tf.reshape(epi_snp_indices, [-1,snps_to_check])
+            reshaped_epi_snp_indices = tf.reshape(epi_snp_indices, [-1])
             # epi_snp_indexes = tf.where(labels_left_bool_t, name='snp_indexes')
             # print("labels_left_bool_t: %s" % labels_left_bool_t.get_shape())
             # split y
@@ -349,6 +351,25 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             point_five_tensor = tf.mul(ones_tensor, point_five)
             greatest_indices = tf.where(tf.greater_equal(values, point_five_tensor, name='predicted_snps'))
             print("greatest_indices: %s" % greatest_indices.get_shape())
+            # convert 'where' indexing to 'top_k' indexing
+            greatest_indices_left = tf.slice(greatest_indices, [0,0], [-1,1])
+            # gather indexes of the predicted epi-causing snps
+            predicted_snps = tf.gather(indices, greatest_indices_left)
+            # reshape from a 5D tensor to a manageable 2D tensor
+            reshaped_predicted_snps = tf.reshape(predicted_snps, [-1])
+            print("reshaped_predicted_snps: %s" % reshaped_predicted_snps.get_shape())
+
+            # predictions_check = tf.equal(reshaped_epi_snp_indices, reshaped_predicted_snps, name='predicted_snps')
+            # print("predictions_check: %s" % predictions_check.get_shape())
+            diff, _ = tf.listdiff(reshaped_predicted_snps, reshaped_epi_snp_indices)
+
+            ##########################################################################
+
+            # ones_tensor = tf.ones([labels_left.get_shape()[1],values.get_shape()[2]], tf.float32)
+            # labels_left_t
+            ones_tensor_y = tf.ones([y_left.get_shape()[1],y_left.get_shape()[2]], tf.float32)
+            point_five = tf.mul(ones_tensor_y, point_five)
+            greatest_values = tf.cast(tf.greater_equal(y_left, point_five), tf.float32)
 
             # missed_predictions = tf.listdiff(greatest_indices, greatest_indices_labels)
             # apply same to y_
@@ -376,15 +397,11 @@ def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
             with tf.name_scope('correct_prediction'):
                 # correct_prediction = tf.equal(y_remade, y_)
                 correct_prediction = tf.equal(tf.argmax(y_remade, 2), tf.argmax(y_, 2))
-                print("correct_prediction: %s" % correct_prediction.get_shape())
-                # print("y_remade: %s" % y_remade.get_shape())
-                # print("y_: %s" % y_.get_shape())
-                # print("correct_prediction: %s" % correct_prediction.get_shape())
                 # correct_prediction_left, _ = tf.split(2, 2, correct_prediction, name='split')
             with tf.name_scope('accuracy'):
                 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.scalar_summary('accuracy_'+name_suffix, accuracy)
-            return accuracy, labels_values, epi_snp_indices, reshaped_epi_snp_indices
+            return accuracy, reshaped_predicted_snps, labels_left, greatest_values
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
