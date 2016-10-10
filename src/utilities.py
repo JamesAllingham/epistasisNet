@@ -94,6 +94,7 @@ def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=t
             tf.histogram_summary(layer_name + '/pre_activations', preactivate)
         activations = act(preactivate, name='activation')
         tf.histogram_summary(layer_name + '/activations', activations)
+        print("%s shape: %s" % (layer_name, activations.get_shape()))
         return activations
 
 def reshape(x, shape, name_suffix='1'):
@@ -106,8 +107,10 @@ def reshape(x, shape, name_suffix='1'):
     Returns:
         a reshaped tensor.
     """
-    with tf.name_scope('reshape_'+name_suffix):
+    layer_name = 'reshape_'+name_suffix
+    with tf.name_scope(layer_name):
         reshaped = tf.reshape(x, shape)
+    print("%s shape: %s" % (layer_name, reshaped.get_shape()))
     return reshaped
 
 def conv_layer(x, shape, strides=[1, 1, 1, 1], standard_deviation=0.1, padding='SAME', name_suffix='1', act=tf.nn.relu):
@@ -136,6 +139,7 @@ def conv_layer(x, shape, strides=[1, 1, 1, 1], standard_deviation=0.1, padding='
             tf.histogram_summary(layer_name + '/preactivate', preactivate)
         activations = act(preactivate, 'activation')
         tf.histogram_summary(layer_name + '/activations', activations)
+        print("%s shape: %s" % (layer_name, activations.get_shape()))     
         return activations
 
 def pool_layer(x, shape=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name_suffix='1'):
@@ -157,6 +161,7 @@ def pool_layer(x, shape=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name
     with tf.variable_scope(layer_name) as scope:
         with tf.name_scope('max_pooling'):
             pooled = tf.nn.max_pool(x, shape, strides, padding)
+        print("%s shape: %s" % (layer_name, pooled.get_shape()))     
         return pooled
 
 def dropout(x, name_suffix='1'):
@@ -171,10 +176,12 @@ def dropout(x, name_suffix='1'):
         a dropped out version of the input tensor.
     """
     # Need to instantiate keep_prob here to correctly make the graph visualization
-    with tf.name_scope('dropout_'+name_suffix):
+    layer_name = 'dropout_'+name_suffix
+    with tf.name_scope(layer_name):
         keep_prob = tf.placeholder(tf.float32)
         #tf.scalar_summary('dropout_keep_probability', keep_prob)
         dropped = tf.nn.dropout(x, keep_prob, seed=42)
+    print("%s shape: %s" % (layer_name, dropped.get_shape()))     
     return dropped, keep_prob
 
 # loss function utilities
