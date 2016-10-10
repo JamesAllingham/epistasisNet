@@ -137,7 +137,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 print('Cost at step %s for output 2: %f' % (i, cost2))
 
                 # save the model every time a new best accuracy is reached
-                if sqrt(cost1**2 + cost2**2) <= best_cost:
+                if cost1 + cost2 <= 0.9*best_cost:
                     best_cost = sqrt(cost1**2 + cost2**2)
                     save_path = saver.save(sess, model_dir + 'convolutional_model')
                     print("saving model at iteration %i" % i)
