@@ -1,12 +1,11 @@
 import sys
 sys.path.append("../src/")
+sys.path.append("src/")
 import unittest
 from os import remove, path
 
 import data_holder
 import data_batcher
-
-sys.path.append("../src/")
 
 class BaseDataHolderTestCase(unittest.TestCase):
     

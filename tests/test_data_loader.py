@@ -1,6 +1,7 @@
 import unittest
 import sys
 sys.path.append("../src/")
+sys.path.append("src/")
 import data_loader
 import numpy as np
 from random import sample
@@ -95,10 +96,10 @@ class GetOutput2OneHotdataTestCase(BaseDataLoaderTestCase):
 
     def runTest(self):
         _, _, y2 = self.dl.get_1_hot_data()
-        self.assertEqual(y2[0,8,0], 0)
-        self.assertEqual(y2[0,8,1], 1)
-        self.assertEqual(y2[99,8,0], 1)
-        self.assertEqual(y2[99,8,1], 0)
+        self.assertEqual(y2[0,8,0], 1)
+        self.assertEqual(y2[0,8,1], 0)
+        self.assertEqual(y2[99,8,0], 0)
+        self.assertEqual(y2[99,8,1], 1)
 
 class GetValidationDataTestCase(BaseDataLoaderTestCase):
 
