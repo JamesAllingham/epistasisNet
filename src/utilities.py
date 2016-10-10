@@ -131,15 +131,9 @@ def conv_layer(x, shape, strides=[1, 1, 1, 1], standard_deviation=0.1, padding='
         with tf.name_scope('kernel'):
             kernel = tn_weight_variable(shape, standard_deviation)
             variable_summaries(kernel, layer_name + '/kernel')
-        with tf.name_scope('biases'):
-            biases = bias_variable([shape[3]])
-            variable_summaries(biases, layer_name + '/biases')
         with tf.name_scope('convolution'):
-            prebias = tf.nn.conv2d(x, kernel, strides, padding=padding)
-            tf.histogram_summary(layer_name + '/pre_bias', prebias)
-        with tf.name_scope('convolution_and_bias'):
-            preactivate = tf.nn.bias_add(prebias, biases)
-            tf.histogram_summary(layer_name + '/pre_activations', preactivate)
+            preactivate = tf.nn.conv2d(x, kernel, strides, padding=padding)
+            tf.histogram_summary(layer_name + '/preactivate', preactivate)
         activations = act(preactivate, 'activation')
         tf.histogram_summary(layer_name + '/activations', activations)
         return activations
