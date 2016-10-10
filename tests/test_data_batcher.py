@@ -4,13 +4,13 @@ import unittest
 
 import numpy as np
 
-import data_batcher
-
 sys.path.append("../src/")
 sys.path.append("src/")
 
+import data_batcher
+
 class BaseDataBatcherTestCase(unittest.TestCase):
-    """Provides a setup function which can be inherited by other test case classes for the DataBatcher."""
+    """Provides a set up function which can be inherited by other test case classes for the DataBatcher."""
 
     def setUp(self):
         """Sets up a DataBatcher object initialised with a data set containing 10 samples.
@@ -29,7 +29,7 @@ class BaseDataBatcherTestCase(unittest.TestCase):
 class GetInputShapeTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct input shape.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct size for its input data.
@@ -45,7 +45,7 @@ class GetInputShapeTestCase(BaseDataBatcherTestCase):
 class GetOutput1ShapeTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output 1 shape.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct size for its output 1 data.
@@ -61,7 +61,7 @@ class GetOutput1ShapeTestCase(BaseDataBatcherTestCase):
 class GetOutput2ShapeTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output 2 shape.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct size for its output 2 data.
@@ -77,7 +77,7 @@ class GetOutput2ShapeTestCase(BaseDataBatcherTestCase):
 class FirstBatchGivesCorrectInputsTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output 2 shape.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct first batch of input data.
@@ -97,7 +97,7 @@ class FirstBatchGivesCorrectInputsTestCase(BaseDataBatcherTestCase):
 class FirstBatchGivesCorrectOutputs1TestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct first output 1 batch.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct first batch of output 1 data.
@@ -116,7 +116,7 @@ class FirstBatchGivesCorrectOutputs1TestCase(BaseDataBatcherTestCase):
 class FirstBatchGivesCorrectOutputs2TestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct first output 2 batch.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct first batch of output 2 data.
@@ -135,7 +135,7 @@ class FirstBatchGivesCorrectOutputs2TestCase(BaseDataBatcherTestCase):
 class InputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct input batch after rolling over an epoch.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct input data after an epoch roll over.
@@ -156,7 +156,7 @@ class InputBatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
 class Output1BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output 1 batch after rolling over an epoch.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct output 1 data after an epoch roll over.
@@ -177,7 +177,7 @@ class Output1BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
 class Output2BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output2 batch after rolling over an epoch.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct output 2 data after an epoch roll over.
@@ -198,7 +198,7 @@ class Output2BatchesRolloverCorrectlyTestCase(BaseDataBatcherTestCase):
 class IfBatchSizeIsNoneReturnAllDataTestCase(BaseDataBatcherTestCase):
     """Provides a test for returning the correct output and input batches if the whole data set it requested.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct input, output 1, and output 2 data if the whole data set is requested.
@@ -219,7 +219,7 @@ class IfBatchSizeIsNoneReturnAllDataTestCase(BaseDataBatcherTestCase):
 class EpochNumberIsCorrectlyReturnedWhenTakingPartialBatches(BaseDataBatcherTestCase):
     """Provides a test for returning the correct epoch number when partial batches cumulatively roll over.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct epoch number when partial batches cause a roll over of the epoch.
@@ -243,7 +243,7 @@ class EpochNumberIsCorrectlyReturnedWhenTakingPartialBatches(BaseDataBatcherTest
 class EpochNumberIsCorrectlyReturnedWhenTakingFullBatches(BaseDataBatcherTestCase):
     """Provides a test for returning the correct epoch number when a full batch is requested.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct epoch number when full batches cause a roll over of the epoch.
@@ -263,7 +263,7 @@ class EpochNumberIsCorrectlyReturnedWhenTakingFullBatches(BaseDataBatcherTestCas
 class EpochNumberIsCorrectlyReturnedWhenTakingMixedBatches(BaseDataBatcherTestCase):
     """Provides a test for returning the correct epoch number when partial batches cumulatively roll over and full batches are requested.
 
-    Inherits from the BaseDataBatcherrTestCase.
+    Inherits from the BaseDataBatcherTestCase.
     """
     def runTest(self):
         """Asserts that the DataBatcher returns the correct epoch number when partial and full batches cause a roll over of the epoch.
