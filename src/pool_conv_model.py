@@ -1,3 +1,8 @@
+# This is a comment for the purpose of time stamping the model used for testing until 12:30 on 10/10/16
+# The model is convolutional with ReLU activations and biases. In addition it uses a single trainer. 
+# The model successful for small batches with decresing performance as the number of SNPs increase. 
+# 70.6 in 53s to 63.1 in 25m51s
+
 from __future__ import absolute_import, division, print_function
 
 import sys
