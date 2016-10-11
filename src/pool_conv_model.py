@@ -1,8 +1,5 @@
-# This is a comment for the purpose of time stamping the model used for testing until 15:00 on 10/10/16
-# The model is convolutional with ReLU activations and no biases. In addition it uses a single trainer. 
-# The model successful for small batches with decresing performance as the number of SNPs increase. 
-# 71.8 in 23s to 66.2 in 6m32s
-
+"""This module is a convolutional model with pooling to test for epistasis on a GAMETES dataset
+"""
 from __future__ import absolute_import, division, print_function
 
 import sys
