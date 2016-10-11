@@ -1,3 +1,8 @@
+# This is a comment for the purpose of time stamping the model used for testing until 15:00 on 10/10/16
+# The model is convolutional with ReLU activations and no biases. In addition it uses a single trainer. 
+# The model successful for small batches with decresing performance as the number of SNPs increase. 
+# 71.8 in 23s to 66.2 in 6m32s
+
 from __future__ import absolute_import, division, print_function
 
 import sys
@@ -12,12 +17,12 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('file_in', '', 'data in file location')
 flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
-flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
+flags.DEFINE_integer('max_steps', 1000, 'maximum steps')
 flags.DEFINE_integer('batch_size', 100, 'training batch size')
 flags.DEFINE_integer('test_batch_size', 1000, 'testing batch size')
 flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
-flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
+flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout')
 flags.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
 flags.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a binary file.')
 flags.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
@@ -39,48 +44,40 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    x_4d = utilities.reshape(x, [-1, 1000, 3, 1], name_suffix='1')
-
-    print("x_4d Shape: %s" % x_4d.get_shape())
+    x_4d = utilities.reshape(x, [-1, num_cols_in, 3, 1], name_suffix='1')
 
     conv1 = utilities.conv_layer(x_4d, [3, 3, 1, 8], padding='SAME', name_suffix='1')
 
-    print("conv1 Shape: %s" % conv1.get_shape())
-
     pool1 = utilities.pool_layer(conv1, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='1')
-
-    print("pool1 Shape: %s" % pool1.get_shape())
 
     conv2 = utilities.conv_layer(pool1, [3, 3, 8, 16], padding='SAME', name_suffix='2')
 
-    print("conv2 Shape: %s" % conv2.get_shape())
-
     pool2 = utilities.pool_layer(conv2, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='2')
-
-    print("pool2 Shape: %s" % pool2.get_shape())
 
     conv3 = utilities.conv_layer(pool2, [1, 3, 16, 32], padding='VALID', name_suffix='3')
 
     pool3 = utilities.pool_layer(conv3, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='3')
 
-    print("conv3 Shape: %s" % conv3.get_shape())
+    final_shape = pool3.get_shape()
+    flatten_size = int(final_shape[1]*final_shape[2]*final_shape[3])
+    flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
-    flatten = utilities.reshape(pool3, [-1, 4000], name_suffix='2')
+    hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden1')
 
-    hidden1 = utilities.fc_layer(flatten, 4000, 2000, layer_name='hidden1')
-    hidden2 = utilities.fc_layer(hidden1, 2000, 1000, layer_name='hidden2')
+    hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden2')
 
-    dropped, keep_prob = utilities.dropout(hidden2)
+    dropped, keep_prob = utilities.dropout(hidden2, name_suffix='1')
 
-    y1 = utilities.fc_layer(dropped, 1000, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+    y1 = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
-    y2 = utilities.reshape(utilities.fc_layer(dropped, 1000, num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
+    y2 = utilities.reshape(utilities.fc_layer(dropped, int(flatten_size/4), num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.nn.softmax), [-1, num_cols_out2, num_states_out2], name_suffix='3')
 
     loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
     loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
+    with tf.name_scope('combine_loss'):
+        combined_loss = tf.add(loss1, loss2)
 
-    train_step1 = utilities.train(learning_rate, loss1, training_method=utilities.Optimizer.Adam, name_suffix='1')
-    train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
+    train_step1 = utilities.train(learning_rate, combined_loss, training_method=utilities.Optimizer.Adam, name_suffix='1')
 
     accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
     accuracy2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test = utilities.calculate_accuracy_test(y2, y2_, 3, name_suffix='2')
@@ -126,7 +123,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 print('Cost at step %s for output 2: %f' % (i, cost2))
 
                 # save the model every time a new best accuracy is reached
-                if sqrt(cost1**2 + cost2**2) <= best_cost:
+                if cost1 + cost2 <= 0.9*best_cost:
                     best_cost = sqrt(cost1**2 + cost2**2)
                     save_path = saver.save(sess, model_dir + 'convolutional_model')
                     print("saving model at iteration %i" % i)
@@ -135,12 +132,12 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 if i % 100 == 99:  # Record execution stats
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
+                    summary, _ = sess.run([merged, train_step1], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
                     train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
                     train_writer.add_summary(summary, i)
                     print('Adding run metadata for', i)
                 else:  # Record a summary
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
+                    summary, _ = sess.run([merged, train_step1], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
                     train_writer.add_summary(summary, i)
 
         train_writer.close()
@@ -148,7 +145,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
         saver.restore(sess, save_path)
 
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
+        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None, None))
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 
@@ -172,21 +169,21 @@ def main(args):
     if not FLAGS.read_binary:
         try:
             dh.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from text file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
         if FLAGS.write_binary:
             try:
                 dh.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
-            except Exception as excep:
+            except IOError as excep:
                 print("Unable to write to binary file")
                 print(excep)
                 sys.exit(2)
     else:
         try:
             dh.read_from_npz(FLAGS.file_in)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from binary file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
