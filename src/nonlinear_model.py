@@ -1,9 +1,12 @@
+"""This module is a nonlinear model to test for epistasis on a GAMETES dataset
+"""
 
 from __future__ import absolute_import, division, print_function
-import tensorflow as tf
+
 import sys
-import getopt
 from math import sqrt
+
+import tensorflow as tf
 
 import data_holder
 import utilities
@@ -34,7 +37,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in], name='x-input')
         y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
         y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
-  
+
     x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
 
     hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 1000, layer_name='hidden_1')
@@ -54,24 +57,22 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     accuracy1 = utilities.calculate_epi_accuracy(y1, y1_, name_suffix='1')
     # accuracy2 = utilities.calculate_epi_accuracy(y2, y2_, name_suffix='2')
     accuracy2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test = utilities.calculate_snp_accuracy(y2, y2_, name_suffix='2')
-    
+
     # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
     merged = tf.merge_all_summaries()
 
     # Train the model, and also write summaries.
     # Every 10th step, measure test-set accuracy, and write test summaries
     # All other steps, run train_step on training data, & add training summaries
-    def feed_dict(train, train_batch_size, test_batch_size, print_y=False):
+    def feed_dict(is_training, train_batch_size, test_batch_size):
         """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
         """
-        if train:
+        if is_training:
             xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
             k = dropout_rate
         else:
             xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
             k = 1.0
-            # if print_y:
-            #     print('y_ at step %s for output 2: %f', y2s)
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
     with tf.Session() as sess:
@@ -87,16 +88,16 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
         best_cost = float('inf')
         for i in range(max_steps):
-      
+
             if i % 10 == 0:  # Record summaries and test-set accuracy
-                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test, missed_snps_test, acc2_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test], feed_dict=feed_dict(False, train_batch_size, test_batch_size, True))
+                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test, missed_snps_test, acc2_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
                 test_writer.add_summary(summary, i)
                 print('Accuracy at step %s for output 1: %f' % (i, acc1))
                 print('Accuracy at step %s for output 2: %f' % (i, acc2))
                 print('Cost at step %s for output 1: %f' % (i, cost1))
                 print('Cost at step %s for output 2: %f' % (i, cost2))
                 print('shape_of_results at step %s for output 2: %f', values_test)
-                print('number_of_ones at step %s for output 2: %f' , any_value_test)
+                print('number_of_ones at step %s for output 2: %f', any_value_test)
                 print('number_of_ones_labels at step %s for output 2: %f', min_tens_test)
                 print('missed_snps_test at step %s for output 2: %f', missed_snps_test)
                 print('acc2_test at step %s for output 2: %f', acc2_test)
@@ -129,9 +130,9 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
 
 def main(args):
-    tf.set_random_seed(42) 
+    tf.set_random_seed(42)
 
-    # Try get user input   
+    # Try get user input
     if not FLAGS.file_in:
         print("Please specify the input file using the '--file_in=' flag.")
         sys.exit(2)
@@ -140,28 +141,28 @@ def main(args):
     tf.gfile.MakeDirs(FLAGS.log_dir)
     if not tf.gfile.Exists(FLAGS.model_dir):
         tf.gfile.MakeDirs(FLAGS.model_dir)
-    
+
     # Import data.
     print("Loading data from: %s" % FLAGS.file_in)
     dh = data_holder.DataHolder()
     if not FLAGS.read_binary:
         try:
             dh.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from text file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
         if FLAGS.write_binary:
             try:
                 dh.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
-            except Exception as excep:
+            except IOError as excep:
                 print("Unable to write to binary file")
                 print(excep)
                 sys.exit(2)
     else:
         try:
             dh.read_from_npz(FLAGS.file_in)
-        except Exception as excep:
+        except IOError as excep:
             print("Unable to read from binary file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
