@@ -52,7 +52,7 @@ def zeros_weight_variable(shape):
 
 def bias_variable(shape):
     """Create a bias variable with appropriate initialization.
-    This needs to be slighly positive so that the ReLU activation functions aren't in an 'off' state
+    This needs to be slighly positive so that the ReLU activation functions aren't in an 'off' state.
 
     Arguments:
         shape: an array describing the shape of the bias vector.
