@@ -103,8 +103,8 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
                 print('Accuracy at step %s for output 2: %f' % (i, acc2))
                 print('Cost at step %s for output 1: %f' % (i, cost1))
                 print('Cost at step %s for output 2: %f' % (i, cost2))
-                # print('values at step %s for output 2: %f', values_test)
-                # print('y at step %s for output 2: %f' , any_value_test)
+                print('values at step %s for output 2: %f', values_test)
+                print('y at step %s for output 2: %f' , any_value_test)
                 print('indices at step %s for output 2: %f', min_tens_test)
 
                 # save the model every time a new best accuracy is reached
