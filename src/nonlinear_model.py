@@ -36,19 +36,13 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
   
     x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
-    # print("x: %s" % x.get_shape())
-    # print("x_flat: %s" % x_flat.get_shape())
 
     hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 1000, layer_name='hidden_1')
     hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
-    # print("hidden1: %s" % hidden1.get_shape())
-    # print("hidden2: %s" % hidden2.get_shape())
 
     dropped, keep_prob = utilities.dropout(hidden2)
-    # print("dropped: %s" % dropped.get_shape())
 
     y1 = utilities.fc_layer(dropped, 500, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
-    # y2 = tf.transpose(dropped, perm=[0, 2, 1])
     y2 = tf.nn.softmax(utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity), [-1, num_cols_out2, num_states_out2]), name='softmax_2')
 
     loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
@@ -72,11 +66,9 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         """
         if train:
             xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
-            # print('y_ at step %s for output 2: %f' , y2s)
             k = dropout_rate
         else:
             xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
-            # print('y_ at step %s for output 2: %f' , y2s)
             k = 1.0
             # if print_y:
             #     print('y_ at step %s for output 2: %f', y2s)
