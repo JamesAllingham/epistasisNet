@@ -1,4 +1,5 @@
-
+"""This module is a linear model to test for epistasis on a GAMETES dataset
+"""
 from __future__ import absolute_import, division, print_function
 
 import sys
@@ -39,7 +40,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
         x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in], name='x-input')
         y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
         y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
-    
+
     x_flat = utilities.reshape(x, [-1, num_cols_in * num_states_in])
 
     hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 500, 'layer1', act=tf.identity)
@@ -68,10 +69,10 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
     # Train the model, and also write summaries.
     # Every 10th step, measure test-set accuracy, and write test summaries
     # All other steps, run train_step on training data, & add training summaries
-    def feed_dict(train, train_batch_size, test_batch_size):
+    def feed_dict(training, train_batch_size, test_batch_size):
         """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders.
         """
-        if train:
+        if training:
             xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
             k = dropout_rate
         else:
@@ -90,7 +91,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size),
-                                        options=run_options, run_metadata=run_metadata)
+                                         options=run_options, run_metadata=run_metadata)
                 train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
                 train_writer.add_summary(summary, i)
                 print('Adding run metadata for', i)
@@ -102,7 +103,7 @@ def train(file_name_and_path, test_train_ratio, log_file_path, max_steps, train_
 
 
 def main(args):
-    # Try get user input   
+    # Try get user input
     if not FLAGS.file_in:
         print("Please specify the input file using the '--file_in=' flag.")
         sys.exit(2)
