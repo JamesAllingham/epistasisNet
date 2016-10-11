@@ -139,7 +139,7 @@ def conv_layer(x, shape, strides=[1, 1, 1, 1], standard_deviation=0.1, padding='
             tf.histogram_summary(layer_name + '/preactivate', preactivate)
         activations = act(preactivate, 'activation')
         tf.histogram_summary(layer_name + '/activations', activations)
-        print("%s shape: %s" % (layer_name, activations.get_shape()))     
+        print("%s shape: %s" % (layer_name, activations.get_shape()))
         return activations
 
 def pool_layer(x, shape=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name_suffix='1'):
@@ -161,7 +161,7 @@ def pool_layer(x, shape=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name
     with tf.variable_scope(layer_name) as scope:
         with tf.name_scope('max_pooling'):
             pooled = tf.nn.max_pool(x, shape, strides, padding)
-        print("%s shape: %s" % (layer_name, pooled.get_shape()))     
+        print("%s shape: %s" % (layer_name, pooled.get_shape()))
         return pooled
 
 def dropout(x, name_suffix='1'):
@@ -179,9 +179,8 @@ def dropout(x, name_suffix='1'):
     layer_name = 'dropout_'+name_suffix
     with tf.name_scope(layer_name):
         keep_prob = tf.placeholder(tf.float32)
-        #tf.scalar_summary('dropout_keep_probability', keep_prob)
         dropped = tf.nn.dropout(x, keep_prob, seed=42)
-    print("%s shape: %s" % (layer_name, dropped.get_shape()))     
+    print("%s shape: %s" % (layer_name, dropped.get_shape()))
     return dropped, keep_prob
 
 # loss function utilities
@@ -293,16 +292,16 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
             labels_left, _ = tf.split(2, 2, y_, name='split')
         with tf.name_scope('predictions'):
             # find indices of predictions >.5
-            greater_than_point_five_predictions_indices = tf.where(tf.greater_equal(y_left, 0.5))
+            predicted_snps = tf.where(tf.greater_equal(y_left, 0.5))
             # tf.gather_nd on labels_left to get a 0s/1s tensor -> stored at [0] on shape (2)
-            prediction_results = tf.gather_nd(labels_left, greater_than_point_five_predictions_indices)
+            prediction_results = tf.gather_nd(labels_left, predicted_snps)
             shape_of_output = tf.shape(prediction_results)
         # find number of 1s -> stored at [0] on shape (2)
         with tf.name_scope('correct_predictions'):
             correct_predictions = tf.shape(tf.where(tf.cast(prediction_results, tf.bool)))
         # find number of 1s in labels_left -> stored at [0] on shape (2)
         with tf.name_scope('expected_output'):
-            indices_of_ones_labels = tf.where(tf.cast(labels_left,tf.bool))
+            indices_of_ones_labels = tf.where(tf.cast(labels_left, tf.bool))
             number_of_ones_labels = tf.shape(indices_of_ones_labels)
         # Find predictions_length = incorrect predictions + correct predictions + missed predictions -> stored at [0] on shape (2)
         with tf.name_scope('all_predictions'):
