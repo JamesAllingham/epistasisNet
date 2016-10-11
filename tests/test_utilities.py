@@ -70,7 +70,7 @@ class ZerosWeightVariableCorrectSizeTestCase(tf.test.TestCase):
         """
         with self.test_session():
             weights = utilities.tn_weight_variable(shape=[4, 33])
-            self.assertAllEqual(weights.get_shape(), [4, 33])
+            self.assertShapeEqual(weights.get_shape(), [4, 33])
 
 class ZerosWeightVariableCorrectValueTestCase(tf.test.TestCase):
     """Provides a test for checking that the zeros_weight_varaible function returns a tensor whos elements are all 0.
@@ -108,7 +108,7 @@ class BiasVariableCorrectSizeTestCase(tf.test.TestCase):
         """
         with self.test_session():
             bias = utilities.bias_variable(shape=[1, 100])
-            self.assertAllEqual(bias.get_shape(), [1, 100])
+            self.assertShapeEqual(bias.get_shape(), [1, 100])
 
 class BiasVariableCorrectValueTestCase(tf.test.TestCase):
     """Provides a test for checking that the bias_varaible function returns a tensor whos elements are all 0.
@@ -150,7 +150,28 @@ class FcLayerCorrectShapeTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([20, 30])
             output_tensor = utilities.fc_layer(input_tensor, 30, 100)
-            self.assertAllEqual(output_tensor.get_shape(), [20, 100])
+            self.assertShapeEqual(output_tensor.get_shape(), [20, 100])
+
+class FcLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+    """Provides a test for checking that the fc_layer function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the fc_layer correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.zeros([20, 30])
+            _ = utilities.fc_layer(input_tensor, 30, 100, layer_name="hidden_1")
+            op_dict = {"hidden_1/Wx_plus_b/MatMul": "MatMul", "hidden_1/Wx_plus_b/add": "add", "hidden_1/activation": "Relu"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 class ReshapeCorrectlyChangesShapeTestCase(tf.test.TestCase):
     """Provides a test for checking that the rehsape function returns a tensor with the correct values in each dimmension.
@@ -191,7 +212,28 @@ class ReshapeCorrectlyFlattensTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([20, 30])
             output_tensor = utilities.reshape(input_tensor, [-1, 600])
-            self.assertAllEqual(output_tensor.get_shape(), [1, 600])
+            self.assertShapeEqual(output_tensor.get_shape(), [1, 600])
+
+class ReshapeAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+    """Provides a test for checking that the reshape function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the reshape correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.zeros([20, 30])
+            _ = utilities.reshape(input_tensor, [2, 300], name_suffix='1')
+            op_dict = {"reshape_1/Reshape": "Reshape"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 class ConvLayerCorrectShapeSAMEPaddingTestCase(tf.test.TestCase):
     """Provides a test for checking that the conv_layer function returns a tensor with the correct values in each dimmension,
@@ -212,7 +254,7 @@ class ConvLayerCorrectShapeSAMEPaddingTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([20, 30, 1])
             output_tensor = utilities.conv_layer(input_tensor, [5, 5, 1, 5])
-            self.assertAllEqual(output_tensor.get_shape(), [20, 30, 5])
+            self.assertShapeEqual(output_tensor.get_shape(), [20, 30, 5])
 
 class ConvLayerCorrectShapeVALIDPaddingTestCase(tf.test.TestCase):
     """Provides a test for checking that the conv_layer function returns a tensor with the correct values in each dimmension,
@@ -233,7 +275,7 @@ class ConvLayerCorrectShapeVALIDPaddingTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([10, 20, 5])
             output_tensor = utilities.conv_layer(input_tensor, [5, 5, 1, 5], padding='VALID')
-            self.assertAllEqual(output_tensor.get_shape(), [12, 22, 5])
+            self.assertShapeEqual(output_tensor.get_shape(), [12, 22, 5])
 
 class ConvLayerCorrectShapeSAMEPaddingAndStridingTestCase(tf.test.TestCase):
     """Provides a test for checking that the conv_layer function returns a tensor with the correct values in each dimmension,
@@ -254,7 +296,28 @@ class ConvLayerCorrectShapeSAMEPaddingAndStridingTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([20, 30, 1])
             output_tensor = utilities.conv_layer(input_tensor, [5, 5, 1, 5], padding='SAME', strides=[1, 2, 2, 1])
-            self.assertAllEqual(output_tensor.get_shape(), [10, 15, 5])
+            self.assertShapeEqual(output_tensor.get_shape(), [10, 15, 5])
+
+class ConvLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+    """Provides a test for checking that the conv_layer function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the conv_layer correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.zeros([20, 30, 1])
+            _ = utilities.conv_layer(input_tensor, [5, 5, 1, 5], padding='SAME', strides=[1, 2, 2, 1], name_suffix='1')
+            op_dict = {"conv_1/convolution/Conv2D": "Conv2D", "conv_1/activation": "Relu"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 class PoolLayerCorrectShapeSAMEPAddingTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer function returns a tensor with the correct values in each dimmension,
@@ -275,7 +338,7 @@ class PoolLayerCorrectShapeSAMEPAddingTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([10, 10, 10])
             output_tensor = utilities.pool_layer(input_tensor, shape=[1, 2, 2, 1])
-            self.assertAllEqual(output_tensor.get_shape(), [5, 5, 10])
+            self.assertShapeEqual(output_tensor.get_shape(), [5, 5, 10])
 
 class PoolLayerCorrectShapeVALIDPAddingTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer function returns a tensor with the correct values in each dimmension,
@@ -296,7 +359,7 @@ class PoolLayerCorrectShapeVALIDPAddingTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([10, 10, 10])
             output_tensor = utilities.pool_layer(input_tensor, shape=[1, 2, 2, 1], padding='VALID')
-            self.assertAllEqual(output_tensor.get_shape(), [4, 4, 10])
+            self.assertShapeEqual(output_tensor.get_shape(), [4, 4, 10])
 
 class PoolLayerCorrectShapeSAMEPAddingAndStridesTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer function returns a tensor with the correct values in each dimmension,
@@ -317,7 +380,7 @@ class PoolLayerCorrectShapeSAMEPAddingAndStridesTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([20, 20, 2])
             output_tensor = utilities.pool_layer(input_tensor, shape=[1, 2, 2, 1], strides=[1, 2, 2, 1])
-            self.assertAllEqual(output_tensor.get_shape(), [5, 5, 2])
+            self.assertShapeEqual(output_tensor.get_shape(), [5, 5, 2])
 
 class PoolLayerCorrectValueTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer returns the correct values.
@@ -339,6 +402,27 @@ class PoolLayerCorrectValueTestCase(tf.test.TestCase):
             output_tensor = utilities.pool_layer(input_tensor)
             self.assertAllEqual(output_tensor, [[[5, 6, 6], [8, 9, 9], [8, 9, 9]]])
 
+class PoolLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+    """Provides a test for checking that the pool_layer function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the pool_layer correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.convert_to_tensor([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+            _ = utilities.pool_layer(input_tensor)
+            op_dict = {"pool_1/max_pooling/MaxPool": "MaxPool"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
+
 class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
     """Provides a test for checking that the dropout_layer does not change the shape of the input.mro
 
@@ -357,7 +441,7 @@ class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
         with self.test_session():
             input_tensor = tf.zeros([2, 3, 4, 5, 6])
             output_tensor = utilities.dropout(input_tensor)
-            self.assertAllEqual(output_tensor.get_shape(), [2, 3, 4, 5, 6])
+            self.assertShapeEqual(output_tensor.get_shape(), [2, 3, 4, 5, 6])
 
 if __name__ == '__main__':
     tf.test.main()
