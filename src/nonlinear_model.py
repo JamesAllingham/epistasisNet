@@ -26,6 +26,21 @@ flags.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a bi
 flags.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
 
 def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learning_rate, dropout_rate, model_dir):
+    """A function that builds and trains the model
+
+    Arguments:
+            dh: a DataHolder object containing the data
+            log_file_path: a string indicating the directory to store the logs
+            max_steps: an integer describing the number of steps to run
+            train_batch_size: an integer describing the size of the training data
+            test_batch_size: an integer describing the size of the testing data
+            learning_rate: an integer describing the initial learning rate for the optimizer
+            dropout_rate: an integer describing the dropout rate
+            model_dir: a string indicating the directory to store the model
+
+        Returns:
+            No return variables
+    """
 
     # get the data dimmensions
     _, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
@@ -64,10 +79,10 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     # Train the model, and also write summaries.
     # Every 10th step, measure test-set accuracy, and write test summaries
     # All other steps, run train_step on training data, & add training summaries
-    def feed_dict(is_training, train_batch_size, test_batch_size):
+    def feed_dict(training, train_batch_size, test_batch_size):
         """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
         """
-        if is_training:
+        if training:
             xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
             k = dropout_rate
         else:
