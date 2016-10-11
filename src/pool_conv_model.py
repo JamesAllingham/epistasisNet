@@ -83,7 +83,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
 
     accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
-    accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
+    accuracy2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test = utilities.calculate_accuracy_test(y2, y2_, 3, name_suffix='2')
 
     # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
     merged = tf.merge_all_summaries()
@@ -118,7 +118,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         for i in range(max_steps):
 
             if i % 10 == 0:  # Record summaries and test-set accuracy
-                summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
+                summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy_test, loss1, loss2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
                 test_writer.add_summary(summary, i)
                 print('Accuracy at step %s for output 1: %f' % (i, acc1))
                 print('Accuracy at step %s for output 2: %f' % (i, acc2))

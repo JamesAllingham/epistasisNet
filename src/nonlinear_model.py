@@ -59,7 +59,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
     accuracy1 = utilities.calculate_accuracy(y1, y1_, name_suffix='1')
     # accuracy2 = utilities.calculate_accuracy(y2, y2_, name_suffix='2')
-    accuracy2, values, test_return, min_value_tens = utilities.calculate_accuracy_test(y2, y2_, 2, name_suffix='2')
+    accuracy2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test = utilities.calculate_accuracy_test(y2, y2_, 3, name_suffix='2')
     
     # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
     merged = tf.merge_all_summaries()
@@ -97,15 +97,17 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
         for i in range(max_steps):
       
             if i % 10 == 0:  # Record summaries and test-set accuracy
-                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens], feed_dict=feed_dict(False, train_batch_size, test_batch_size, True))
+                summary, acc1, acc2, cost1, cost2, values_test, any_value_test, min_tens_test, missed_snps_test, acc2_test = sess.run([merged, accuracy1, accuracy2, loss1, loss2, values, test_return, min_value_tens, epi_snps_missed, accuracy_test], feed_dict=feed_dict(False, train_batch_size, test_batch_size, True))
                 test_writer.add_summary(summary, i)
                 print('Accuracy at step %s for output 1: %f' % (i, acc1))
                 print('Accuracy at step %s for output 2: %f' % (i, acc2))
                 print('Cost at step %s for output 1: %f' % (i, cost1))
                 print('Cost at step %s for output 2: %f' % (i, cost2))
-                print('values at step %s for output 2: %f', values_test)
-                print('y at step %s for output 2: %f' , any_value_test)
-                print('indices at step %s for output 2: %f', min_tens_test)
+                print('shape_of_results at step %s for output 2: %f', values_test)
+                print('number_of_ones at step %s for output 2: %f' , any_value_test)
+                print('number_of_ones_labels at step %s for output 2: %f', min_tens_test)
+                print('missed_snps_test at step %s for output 2: %f', missed_snps_test)
+                print('acc2_test at step %s for output 2: %f', acc2_test)
 
                 # save the model every time a new best accuracy is reached
                 if sqrt(cost1**2 + cost2**2) <= best_cost:
