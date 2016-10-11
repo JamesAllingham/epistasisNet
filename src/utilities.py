@@ -255,8 +255,8 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
 
 # #accuracy utilities
 
-def calculate_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
-    """Compares the output of the neural network with the expected output and returns the accuracy.
+def calculate_epi_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
+    """Compares the epi output of the neural network with the expected epi output and returns the accuracy.
 
     Arguments:
         y: the given output tensor.
@@ -266,158 +266,52 @@ def calculate_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
     Returns:
         a scalar describing the accuracy of the given output when compared with the expected output.
     """
-    # check for whether model has correctly predicted the snps causing epi
-    with tf.name_scope('accuracy_'+name_suffix):
-        if snps_to_check != 0:
-            # split y
-            y_left, _ = tf.split(2, 2, y, name='split')
-            # transpose as top_k runs on rows not columns
-            y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
-            # get k many max values
-            values, _ = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
-            # get smallest value as a 0D tensor
-            min_value = tf.reduce_min(values, name='find_min_snp')
-            # create tensor of smallest snp value same size as y_left
-            ones_tensor = tf.ones([y.get_shape()[1], 1], tf.float32)
-            min_value_tensor = tf.mul(ones_tensor, min_value)
-            # compare all snps with that of min_value_tensor to find which have been predicted
-            predicted_snps = tf.greater_equal(y_left, min_value_tensor, name='predicted_snps')
-            # create mirrored tensor and concat together (needs to be in bool for xor), then cast to 1s and 0s
-            y = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
-
+    with tf.name_scope('epi_accuracy_'+name_suffix):
         with tf.name_scope('correct_prediction'):
             correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-            # print("y: %s" % y.get_shape())
-            # print("y_: %s" % y_.get_shape())
-            # print("correct_prediction: %s" % correct_prediction.get_shape())
-        with tf.name_scope('accuracy'):
+        with tf.name_scope('epi_accuracy'):
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            tf.scalar_summary('accuracy_'+name_suffix, accuracy)
+            tf.scalar_summary('epi_accuracy_'+name_suffix, accuracy)
         return accuracy
 
-def calculate_accuracy_test(y, y_, snps_to_check=0, name_suffix='1'):
-    """Compares the output of the neural network with the expected output and returns the accuracy.
+def calculate_snp_accuracy(y, y_, name_suffix='1'):
+    """Compares the snp output of the neural network with the expected snp output and returns the accuracy.
 
     Arguments:
         y: the given output tensor.
         y_: the expected output tensor.
-        snps_to_check: how many snps cause epi
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
 
     Returns:
-        a scalar describing the accuracy of the given output when compared with the expected output.
+        a scalar describing the accuracy of the given snp output when compared with the expected snp output.
     """
 
-    # check for whether model has correctly predicted the snps causing epi
-    with tf.name_scope('accuracy_'+name_suffix):
-        if snps_to_check != 0:
-
-            # split y
+    # split y, labels
+    with tf.name_scope('snp_accuracy_'+name_suffix):
+        with tf.name_scope('split'):
             y_left, _ = tf.split(2, 2, y, name='split')
-            y_left_t = tf.transpose(y_left, perm=[0, 2, 1])
-
-            ########################################## 
-            # Attempt to find accuracy through parsing the case, epi-causing snp indexes
-
-            # 50 percent certainty for confidence check
-            # point_five = tf.constant([0.5])
-            # get yes/no labels
             labels_left, _ = tf.split(2, 2, y_, name='split')
-            # # labels_left_bool = tf.cast(labels_left, tf.bool)
-            # # transpose (?,1,10) -> (?,10,1) for top_k to work
-            # labels_left_t = tf.transpose(labels_left, perm=[0, 2, 1])
-            # # get labels that cause epi
-            # labels_values, labels_indices = tf.nn.top_k(labels_left_t, snps_to_check, name='snp_probabilities')
-            # # create check to only consider indices of epi snps when case not control
-            # ones_tensor_labels = tf.ones([labels_values.get_shape()[1],labels_values.get_shape()[2]], tf.float32)
-            # point_five_tensor_labels = tf.mul(ones_tensor_labels, point_five)
-            # greater_than_point_five_labels = tf.greater_equal(labels_values, point_five_tensor_labels, name='predicted_snps')
-            # greatest_indices_labels = tf.where(greater_than_point_five_labels)
-            # print("greatest_indices_labels: %s" % greatest_indices_labels.get_shape())
-            # # convert 'where' indexing to 'top_k' indexing
-            # greatest_indices_labels_left = tf.slice(greatest_indices_labels, [0,0], [-1,1])
-            # greatest_indices_labels_string = tf.cast(greatest_indices_labels, tf.string)
-            # print("greatest_indices_labels_left: %s" % greatest_indices_labels_left.get_shape())
-            # # gather indexes of the epi snp indices in the cases
-            # epi_snp_indices = tf.gather(labels_indices, greatest_indices_labels_left)
-            # # reshape from a 5D tensor to a manageable 2D tensor
-            # reshaped_epi_snp_indices = tf.reshape(epi_snp_indices, [-1])
-            # # epi_snp_indexes = tf.where(labels_left_bool_t, name='snp_indexes')
-
-            # # get k many max values
-            # values, indices = tf.nn.top_k(y_left_t, snps_to_check, name='snp_probabilities')
-            # # cut the predictions that aren't above .5 probability
-            # ones_tensor = tf.ones([values.get_shape()[1],values.get_shape()[2]], tf.float32)
-            # point_five_tensor = tf.mul(ones_tensor, point_five)
-            # greatest_indices = tf.where(tf.greater_equal(values, point_five_tensor, name='predicted_snps'))
-            # # convert 'where' indexing to 'top_k' indexing
-            # greatest_indices_left = tf.slice(greatest_indices, [0,0], [-1,1])
-            # # gather indexes of the predicted epi-causing snps
-            # predicted_snps = tf.gather(indices, greatest_indices_left)
-            # # reshape from a 5D tensor to a manageable 2D tensor
-            # reshaped_predicted_snps = tf.reshape(predicted_snps, [-1])
-
-            # diff, _ = tf.listdiff(reshaped_predicted_snps, reshaped_epi_snp_indices)
-
-            # END
-            ##########################################################################
-
-            # THIS WORKS
-
-            # get labelled snps
-            # find indices of predictions >.5, and compare indices
+        with tf.name_scope('predictions'):
+            # find indices of predictions >.5
             greater_than_point_five_predictions_indices = tf.where(tf.greater_equal(y_left, 0.5))
-            # tf.gather_nd on labels_left to get a 0s/1s tensor
-            gather_prediction_results = tf.gather_nd(labels_left, greater_than_point_five_predictions_indices)
-            shape_of_results = tf.shape(gather_prediction_results)
-            # find number of 1s - stored at [0] on shape (2) in number_of_ones
-            number_of_ones = tf.shape(tf.where(tf.cast(gather_prediction_results, tf.bool)))
-            # find number of 1s in labels_left
+            # tf.gather_nd on labels_left to get a 0s/1s tensor -> stored at [0] on shape (2)
+            prediction_results = tf.gather_nd(labels_left, greater_than_point_five_predictions_indices)
+            shape_of_output = tf.shape(prediction_results)
+        # find number of 1s -> stored at [0] on shape (2)
+        with tf.name_scope('correct_predictions'):
+            correct_predictions = tf.shape(tf.where(tf.cast(prediction_results, tf.bool)))
+        # find number of 1s in labels_left -> stored at [0] on shape (2)
+        with tf.name_scope('expected_output'):
             indices_of_ones_labels = tf.where(tf.cast(labels_left,tf.bool))
             number_of_ones_labels = tf.shape(indices_of_ones_labels)
-            # Find predictions_length = incorrect predictions + correct predictions + missed predictions -> stored at [0] on shape (2)
-            epi_snps_missed = number_of_ones_labels - number_of_ones + shape_of_results
-            # accuracy = correct predictions / size -> stored at [0] on shape (2)
-            accuracy_test = (tf.cast(number_of_ones, tf.float32) / tf.cast(epi_snps_missed, tf.float32))[0]
-
-            # ##########################################################################
-            # # find how many 1s are in labels_left (tf.get_shape()[0] on tf.where output )
-            # # find that many top_k in y_left
-            # # tf.gather_nd from top_k indices on 
-
-            # ##########################################################################
-
-            # greatest_values = tf.cast(tf.greater_equal(y_left, point_five), tf.float32)
-
-            # ############################################################
-            # #  FIRST ALGORITHM
-
-            # # get smallest value for each person to give a 1D tensor
-            # min_top_values = tf.slice(values, [0,0,snps_to_check-1], [-1,-1,snps_to_check-1])
-            # # reshaped_min_top_values = tf.reshape(min_top_values, [-1,1])
-            # # print("reshaped_min_top_values: %s" % reshaped_min_top_values.get_shape())
-            # # min_value = tf.reduce_min(values, name='find_min_snp')
-            # # min_value_test_check = tf.reduce_min(values, reduction_indices=1, name='find_min_snp')
-            # # create tensor of smallest snp value same size as y_left
-            # ones_tensor = tf.ones([y.get_shape()[1], 1], tf.float32)
-            # # min_value_tensor = tf.mul(ones_tensor, min_value)
-            # # compare all snps with that of min_value_tensor to find which have been predicted
-            # predicted_snps = tf.greater_equal(y_left, min_top_values, name='predicted_snps')
-            # # create mirrored tensor and concat together (needs to be in bool for xor), then cast to 1s and 0s
-            # y_remade = tf.cast(tf.concat(2, [predicted_snps, tf.logical_xor(predicted_snps, tf.cast(ones_tensor, tf.bool))], name='concat'), tf.float32)
-            # # print('y: %s' % y.get_shape())
-            # with tf.name_scope('correct_prediction'):
-            #     # correct_prediction = tf.equal(y_remade, y_)
-            #     correct_prediction = tf.equal(tf.argmax(y_remade, 2), tf.argmax(y_, 2))
-            #     # correct_prediction_left, _ = tf.split(2, 2, correct_prediction, name='split')
-            # with tf.name_scope('accuracy'):
-            #     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-            # END
-            ############################################################
-
-            tf.scalar_summary('accuracy_'+name_suffix, accuracy_test)
-            return accuracy_test, shape_of_results, number_of_ones, number_of_ones_labels, epi_snps_missed, accuracy_test
+        # Find predictions_length = incorrect predictions + correct predictions + missed predictions -> stored at [0] on shape (2)
+        with tf.name_scope('all_predictions'):
+            all_predictions = number_of_ones_labels - correct_predictions + shape_of_output
+        # accuracy = correct_predictions / all_predictions -> stored at [0] on shape (2)
+        with tf.name_scope('snp_accuracy'):
+            accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
+        tf.scalar_summary('snp_accuracy_'+name_suffix, accuracy)
+        return accuracy
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
