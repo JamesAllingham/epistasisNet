@@ -62,15 +62,17 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     flatten_size = int(final_shape[1]*final_shape[2]*final_shape[3])
     flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
-    hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden1')
+    hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/2), layer_name='hidden_1')
 
-    hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden2')
+    hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden_2')
 
     dropped, keep_prob = utilities.dropout(hidden2, name_suffix='1')
 
     y1 = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
-    y2 = tf.nn.softmax(utilities.reshape(utilities.fc_layer(dropped, int(flatten_size/4), num_states_out2*num_cols_out2, layer_name='softmax_2', act=tf.identity), [-1, num_cols_out2, num_states_out2], name_suffix='3'))
+    with tf.name_scope('softmax_2'):
+        fc_layer = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
+        y2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
     loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
     loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
