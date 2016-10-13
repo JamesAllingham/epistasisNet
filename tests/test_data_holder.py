@@ -74,7 +74,7 @@ class ReadTxtTestCase(BaseDataHolderTestCase):
         self.assertIsInstance(self.dh.get_testing_data(), data_batcher.DataBatcher)
         self.assertIsInstance(self.dh.get_training_data(), data_batcher.DataBatcher)
         self.assertIsInstance(self.dh.get_validation_data(), data_batcher.DataBatcher)
-        self.assertIsInstance(self.dh.get_header_data(), list)
+        self.assertIsInstance(self.dh.get_header_data(), np.ndarray)
 
 class WriteBinaryTestCase(BaseDataHolderTestCase):
     """Provides a test for correctly (without any errors) writing a binary file containing the stored data.
@@ -113,7 +113,7 @@ class ReadBinaryTestCase(BaseDataHolderTestCase):
     """
 
     def runTest(self):
-        """Asserts that the DataHolder correctly (without any errors) reads from a written binary file and returns DataBatcher objects.
+        """Asserts that the DataHolder correctly (without any errors) reads from a written binary file and returns DataBatcher objects and a list for the header.
 
         Arguments:
             Nothing.
@@ -129,6 +129,7 @@ class ReadBinaryTestCase(BaseDataHolderTestCase):
         self.assertIsInstance(dh2.get_testing_data(), data_batcher.DataBatcher)
         self.assertIsInstance(dh2.get_training_data(), data_batcher.DataBatcher)
         self.assertIsInstance(dh2.get_validation_data(), data_batcher.DataBatcher)
+        self.assertIsInstance(dh2.get_header_data(), np.ndarray)
 
     def tearDown(self):
         """Removes the temporary binary file used for the test.
