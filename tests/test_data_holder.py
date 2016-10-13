@@ -3,6 +3,7 @@
 import sys
 import unittest
 from os import path, remove
+import numpy as np
 
 sys.path.append("../src/")
 sys.path.append("src/")
@@ -62,7 +63,7 @@ class ReadTxtTestCase(BaseDataHolderTestCase):
     Inherits from the BaseDataHolderTestCase.
     """
     def runTest(self):
-        """Asserts that the DataHolder returns DataBatcher objects after loading the data.
+        """Asserts that the DataHolder returns DataBatcher objects and a list object for header after loading the data.
 
         Arguments:
             Nothing.
@@ -73,6 +74,7 @@ class ReadTxtTestCase(BaseDataHolderTestCase):
         self.assertIsInstance(self.dh.get_testing_data(), data_batcher.DataBatcher)
         self.assertIsInstance(self.dh.get_training_data(), data_batcher.DataBatcher)
         self.assertIsInstance(self.dh.get_validation_data(), data_batcher.DataBatcher)
+        self.assertIsInstance(self.dh.get_header_data(), list)
 
 class WriteBinaryTestCase(BaseDataHolderTestCase):
     """Provides a test for correctly (without any errors) writing a binary file containing the stored data.
