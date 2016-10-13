@@ -1,24 +1,27 @@
-"""This module is a convolutional model with pooling to test for epistasis on a GAMETES dataset
+"""This module supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
 """
 from __future__ import absolute_import, division, print_function
 
 import tensorflow as tf
 
 import utilities
+import model
 
-class PoolConvModel(object):
+class PoolConvModel(model.Model):
     """A class which builds a TensorFlow graph for a deep neural network with pooling and convolutional layers.
 
     The network structure is as follows:
 
-    input --> reshape --> conv --> pool --> conv --> pool --> conv --> pool --> reshape --> Mx+b --> Mx+b --> dropout --> softmax
-                                                                                                                      --> softmax
+    input --> reshape --> conv --> pool --> conv --> pool --> conv --> pool --> reshape --> hidden --> hidden --> dropout --> softmax
+                                                                                                                          --> softmax
     [?, x, 3] --> [?, x, 3, 1] --> [?, x, 3, 8] --> [?, x/2, 3, 8] --> [?, x/2, 3, 16] --> [?, x/4, 3, 16] --> [?, x/4, 1, 32] --> [?, x/8, 1, 32] --> [?, 4x, 1] --> [?, 2x, 1] --> [?, x, 1] --> [?, x, 1] --> [?, 2, 1]
                                                                                                                                                                                                              --> [?, 2, x]
     """
 
     def __init__(self, x, y1_, y2_, learning_rate):
-        """Creates a PoolConvModel.get_accuracies
+        """Creates a PoolConvModel.
+
+        Inherits from Model.
 
         Parameters:
             x: the placeholder for the input tensor.
@@ -68,7 +71,7 @@ class PoolConvModel(object):
         hidden2 = utilities.fc_layer(hidden1, int(flatten_size/2), int(flatten_size/4), layer_name='hidden_2')
 
         # the dropout layer reduces over fitting
-        dropped, self.keep_prob = utilities.dropout(hidden2, name_suffix='1')
+        dropped, self._keep_prob = utilities.dropout(hidden2, name_suffix='1')
 
         # the network splits here:
         # the first softmax layer reduces the output to a percentage chance for each of the output states
@@ -80,74 +83,19 @@ class PoolConvModel(object):
             output2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
         # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
-        self.loss1 = utilities.calculate_cross_entropy(output1, y1_, name_suffix='1')
-        self.loss2 = utilities.calculate_cross_entropy(output2, y2_, name_suffix='2')
+        self._loss1 = utilities.calculate_cross_entropy(output1, y1_, name_suffix='1')
+        self._loss2 = utilities.calculate_cross_entropy(output2, y2_, name_suffix='2')
         # these losses are compined into one for the training
         with tf.name_scope('combined_loss'):
-            combined_loss = tf.add(self.loss1, self.loss2)
+            combined_loss = tf.add(self._loss1, self._loss2)
 
         # the loss is used with the back propagtion algorithm to use gradient descent based ADAM optimization to teach the network
-        self.train_step = utilities.train(learning_rate, combined_loss, training_method=utilities.Optimizer.Adam, name_suffix='1')
+        self._train_step = utilities.train(learning_rate, combined_loss, training_method=utilities.Optimizer.Adam, name_suffix='1')
 
         # the accuracies for each output are calculated by comparing them to the correct outputs
-        self.accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
-        self.accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, name_suffix='2')
+        self._accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
+        self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, name_suffix='2')
 
         # merge all the summaries
-        self.merged = tf.merge_all_summaries()
-
-    def get_accuracies(self):
-        """Returns sessions to run in order to get the accuracies for each of the outputs.
-
-        Arguments:
-            Nothing.
-
-        Returns:
-            (accuracy1, accuracy2) - TensorFlow sessions which return the accuracies for output 1 and output 2 respectively.
-        """
-        return self.accuracy1, self.accuracy2
-
-    def get_losses(self):
-        """Returns sessions to run in order to get the lesses for each of the outputs.
-
-        Arguments:
-            Nothing.
-
-        Returns:
-            (loss1, loss2) - TensorFlow sessions which return the losses for output 1 and output 2 respectively.
-        """
-        return self.loss1, self.loss2
-
-    def get_merged(self):
-        """Returns a session to run in order to get the merged graph summary.
-
-        Arguments:
-            Nothing.
-
-        Returns:
-            The merged TensorFlow session.
-        """
-        return self.merged
-
-    def get_train_step(self):
-        """Returns a session to run in order to train the network.
-
-        Arguments:
-            Nothing.
-
-        Returns:
-            The training TensorFlow session.
-        """
-        return self.train_step
-
-    def get_keep_prob(self):
-        """Returns a TensorFlow variable for the keep probability of the Dropout layer(s).
-
-        Arguments:
-            Nothing.
-
-        Returns:
-            The keep probability tensorflow varaible.
-        """
-        return self.keep_prob
+        self._merged = tf.merge_all_summaries()
         
