@@ -30,6 +30,7 @@ class DataHolder(object):
         self.__testing = None
         self.__training = None
         self.__validation = None
+        self.__headers = None
         self.__data_loader = None
 
     def read_from_txt(self, file_name_and_path, test_train_ratio=0.8, valid_train_ratio=0.75):
@@ -52,6 +53,7 @@ class DataHolder(object):
         self.__testing = data_batcher.DataBatcher(testing_x, testing_y1, testing_y2)
         validation_x, validation_y1, validation_y2 = self.__data_loader.get_validation_data()
         self.__validation = data_batcher.DataBatcher(validation_x, validation_y1, validation_y2)
+        self.__headers = self.__data_loader.get_header_data()
 
     def write_to_binary(self, file_name_and_path):
         """Writes a processed .txt file to a .npz (binary) file.
@@ -65,13 +67,15 @@ class DataHolder(object):
         training_x, training_y1, training_y2 = self.__data_loader.get_training_data()
         testing_x, testing_y1, testing_y2 = self.__data_loader.get_testing_data()
         validation_x, validation_y1, validation_y2 = self.__data_loader.get_validation_data()
+        headers = self.__data_loader.get_header_data()
         np.savez(file_name_and_path,
                  testing_x=testing_x, testing_y1=testing_y1, testing_y2=testing_y2,
                  training_x=training_x, training_y1=training_y1, training_y2=training_y2,
-                 validation_x=validation_x, validation_y1=validation_y1, validation_y2=validation_y2)
+                 validation_x=validation_x, validation_y1=validation_y1, validation_y2=validation_y2,
+                 headers=headers)
 
     def read_from_npz(self, file_name_and_path):
-        """Reads a data set from a .npz (binary) file, storing it as three data sets: training, testing, and validation.
+        """Reads a data set from a .npz (binary) file, storing it as four data sets: training, testing, validation and headers.
 
         Note that unlike the read_from_txt function the varios data set size ratios do not need to be set. They are stored in the binary.
 
@@ -85,6 +89,7 @@ class DataHolder(object):
         self.__training = data_batcher.DataBatcher(npzfile['training_x'], npzfile['training_y1'], npzfile['training_y2'])
         self.__testing = data_batcher.DataBatcher(npzfile['testing_x'], npzfile['testing_y1'], npzfile['testing_y2'])
         self.__validation = data_batcher.DataBatcher(npzfile['validation_x'], npzfile['validation_y1'], npzfile['validation_y2'])
+        self.__headers = npzfile['headers']
 
     def get_testing_data(self):
         """Gets the testing data being stored.
@@ -118,3 +123,14 @@ class DataHolder(object):
             A DataBatcher object containing the validation data.
         """
         return self.__validation
+
+    def get_header_data(self):
+        """Gets the header data being stored.
+
+        Arguments:
+            None
+
+        Returns:
+            A DataBatcher object containing the validation data.
+        """
+        return self.__headers
