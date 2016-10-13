@@ -10,6 +10,8 @@ import data_holder
 
 # import the various models which can be run
 import pool_conv_model
+import convolutional_model
+import nonlinear_model
 import linear_model
 
 APP_FLAGS = tf.app.flags
@@ -58,7 +60,7 @@ def train_model(dh):
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    model = pool_conv_model.PoolConvModel(x, y1_, y2_, FLAGS.learning_rate)
+    model = nonlinear_model.NonLinearModel(x, y1_, y2_, FLAGS.learning_rate)
 
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
