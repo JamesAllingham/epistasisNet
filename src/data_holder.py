@@ -131,6 +131,6 @@ class DataHolder(object):
             None
 
         Returns:
-            A DataBatcher object containing the validation data.
+            A numpy array containing the header names
         """
         return self.__headers
