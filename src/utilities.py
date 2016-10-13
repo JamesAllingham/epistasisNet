@@ -287,9 +287,8 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
 
     # split y, labels
     with tf.name_scope('snp_accuracy_'+name_suffix):
-        with tf.name_scope('split'):
-            y_left, _ = tf.split(2, 2, y, name='split')
-            labels_left, _ = tf.split(2, 2, y_, name='split')
+        y_left = get_causing_epi_probs(y)
+        labels_left = get_causing_epi_probs(y_)
         with tf.name_scope('predictions'):
             # find indices of predictions >.5
             predicted_snps = tf.where(tf.greater_equal(y_left, 0.5))
@@ -321,8 +320,25 @@ def predict_snps(y, snps_to_predict):
     Returns:
         predicted_snps: a tensor with the indices of the predicted snps
     """
-    _, predicted_snps = tf.nn.top_k(y, snps_to_predict, name='find_top_snps')
-    return predicted_snps
+    with tf.name_scope('snp_prediction'):
+        y_left = get_causing_epi_probs(y)
+        y_left_t = tf.transpose(y_left, [0, 2, 1])
+        top_snps = tf.where(tf.greater_equal(y_left, 0.5))
+        _, predicted_snps = tf.nn.top_k(y_left_t, snps_to_predict, name='find_top_snps')
+        return predicted_snps
+
+def get_causing_epi_probs(y):
+    """Gets the 'causing epi' probabilities on a tensor containing predictions of whether snps are causing epi 
+
+    Arguments:
+        y: the tensor to split
+
+    Returns:
+        y_left: a tensor with the 'causing epi' probabilities
+    """
+    with tf.name_scope('split'):
+        y_left, _ = tf.split(2, 2, y, name='split')
+        return y_left
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
