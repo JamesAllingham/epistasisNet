@@ -1,4 +1,4 @@
-"""This module provides a single class: DataLoader, which manages reading of raw data and formatting is appropriately.
+"""This module provides a single class: DataLoader, which manages reading of raw data and formatting appropriately.
 """
 
 import math
@@ -20,7 +20,7 @@ class DataLoader(object):
 
         Data members for the file path, test-train ratio, and validation-train ratio are initilised with the given values.
 
-        All other data memberr varibles are initialised to None.
+        All other data member varibles are initialised to None.
 
         Arguments:
             file_name_and_path: A string describing the file name (and relative path) of the .txt file to read.
