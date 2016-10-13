@@ -14,7 +14,7 @@ class LinearModel(model.Model):
 
     input --> reshape --> hidden --> softmax
                                  --> softmax
-    [?, x, 3] --> [?, 3x] --> [?, 6x] --> [?, 2]
+    [?, x, 3] --> [?, 3x] --> [?, 6x] --> [?, 2, 1]
                                       --> [?, 2, x]
     """
 
