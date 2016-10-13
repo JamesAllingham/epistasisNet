@@ -46,11 +46,11 @@ class DataLoader(object):
         # Generate the secondary output
         with open(file_name_and_path, 'r') as open_file:
             header = open_file.readline().strip()
-            headers = header.split("\t")
+            self.__headers = header.split("\t")
             self.__y_2 = np.zeros(self.__x.shape)
             for (i, row) in enumerate(self.__y_2):
                 for (j, _) in enumerate(row):
-                    if self.__y_1[i] == 1 and headers[j][0] == 'M':
+                    if self.__y_1[i] == 1 and self.__headers[j][0] == 'M':
                         self.__y_2[i][j] = 1
 
         self.__x_1_hot = None
@@ -201,3 +201,13 @@ class DataLoader(object):
             A triple containing (x, y1, y2). Each element is a numpy array.
         """
         return (self.__x, self.__y_1, self.__y_2)
+
+    def get_header_data(self):
+        """Returns all of the header data.
+        Arguments:
+            Nothing.
+
+        Returns:
+            A numpy array containing the header name of each column.
+        """
+        return (self.__headers)
