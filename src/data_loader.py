@@ -203,11 +203,11 @@ class DataLoader(object):
         return (self.__x, self.__y_1, self.__y_2)
 
     def get_header_data(self):
-        """Returns all of the header data.
+        """Returns the header data.
         Arguments:
             Nothing.
 
         Returns:
             A numpy array containing the header name of each column.
         """
-        return (self.__headers)
+        return np.array(self.__headers)
