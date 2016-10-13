@@ -150,3 +150,4 @@ class PoolConvModel(object):
             The keep probability tensorflow varaible.
         """
         return self.keep_prob
+        
