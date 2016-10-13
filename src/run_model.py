@@ -7,7 +7,10 @@ import sys
 import tensorflow as tf
 
 import data_holder
+
+# import the various models which can be run
 import pool_conv_model
+import linear_model
 
 APP_FLAGS = tf.app.flags
 FLAGS = APP_FLAGS.FLAGS
@@ -125,7 +128,6 @@ def train_model(dh):
 
         best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None))
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
-
 
 def main(args):
     # Set the random seed so that results will be reproducable.
