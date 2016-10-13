@@ -96,6 +96,8 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     accuracy1 = utilities.calculate_epi_accuracy(y1, y1_, name_suffix='1')
     accuracy2 = utilities.calculate_snp_accuracy(y2, y2_, name_suffix='2')
 
+    predicted_snps = utilities.predict_snps(y2, 2)
+
     # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
     merged = tf.merge_all_summaries()
 
@@ -159,8 +161,9 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
         saver.restore(sess, save_path)
 
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None, None))
+        best_acc1, best_acc2, pred_snps = sess.run([accuracy1, accuracy2, predicted_snps], feed_dict=feed_dict(False, None, None))
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
+        # print("The snps predicted to cause epi were %s" % (pred_snps))
 
 
 def main(args):

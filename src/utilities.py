@@ -252,7 +252,7 @@ def train(learning_rate, loss_function, training_method=Optimizer.GradientDescen
             train_step = tf.train.FtrlOptimizer(learning_rate, name="Ftrl_"+name_suffix).minimize(loss_function)
     return train_step
 
-# #accuracy utilities
+# accuracy utilities
 
 def calculate_epi_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
     """Compares the epi output of the neural network with the expected epi output and returns the accuracy.
@@ -311,6 +311,18 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
             accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
         tf.scalar_summary('snp_accuracy_'+name_suffix, accuracy)
         return accuracy
+
+def predict_snps(y, snps_to_predict):
+    """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
+
+    Arguments:
+        snps_to_predict: the number of snps to return
+
+    Returns:
+        predicted_snps: a tensor with the indices of the predicted snps
+    """
+    _, predicted_snps = tf.nn.top_k(y, snps_to_predict, name='find_top_snps')
+    return predicted_snps
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
