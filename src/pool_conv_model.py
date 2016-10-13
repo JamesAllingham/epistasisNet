@@ -31,6 +31,7 @@ class PoolConvModel(model.Model):
         Returns:
             A PoolConvModel object.
         """
+        model.Model.__init__(self)
 
         # get sizes for the input and outputs
         num_cols_in = x.get_shape().as_list()[1]
