@@ -245,5 +245,22 @@ class GetTrainingDataTestCase(BaseDataLoaderTestCase):
         self.assertEqual(len(y1), 60)
         self.assertEqual(len(y2), 60)
 
+class GetHeaderDataTestCase(BaseDataLoaderTestCase):
+    """Provides a test for checking that the header data is the correct size.
+
+    Inherits from the BaseDataLoaderTestCase.
+    """
+    def runTest(self):
+        """Asserts that the DataLoader returns one numpy array of the correct size for the training set.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        h = self.dl.get_header_data()
+        self.assertEqual(len(h), 10)
+
 if __name__ == "__main__":
     unittest.main()
