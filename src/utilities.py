@@ -311,11 +311,12 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
         tf.scalar_summary('snp_accuracy_'+name_suffix, accuracy)
         return accuracy
 
-def predict_snps(y, snps_to_predict):
+def predict_snps(y, snps_to_predict, test=False):
     """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
 
     Arguments:
-        snps_to_predict: the number of snps to return
+        y: the given output tensor
+        snps_to_predict: an integer defining the number of snps to return
 
     Returns:
         predicted_snps: a tensor with the indices of the predicted snps
@@ -323,12 +324,37 @@ def predict_snps(y, snps_to_predict):
     with tf.name_scope('snp_prediction'):
         y_left = get_causing_epi_probs(y)
         y_left_t = tf.transpose(y_left, [0, 2, 1])
-        top_snps = tf.where(tf.greater_equal(y_left, 0.5))
-        _, predicted_snps = tf.nn.top_k(y_left_t, snps_to_predict, name='find_top_snps')
-        return predicted_snps
+        if not test:
+            _, predicted_snps = tf.nn.top_k(y_left_t, snps_to_predict, name='find_top_snps')
+            reshaped = tf.reshape(predicted_snps, [-1])
+            top_pred_snps, _, count = tf.unique_with_counts(reshaped)
+            count = count + [0, 1, 0]
+            _, top_counts = tf.nn.top_k(count, 1, name='strip_low_values')
+            predictions = tf.gather(top_pred_snps, top_counts)
+            return top_pred_snps, count, predictions
+        else:
+            top_snps = tf.where(tf.greater_equal(y_left, 0.5))
+            print('top_snps: %s' % top_snps)
+            _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
+            top_snp_indices = tf.reshape(top_snp_indices, [-1])
+            top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
+            return top_pred_snps, count
+
+def get_snp_headers(snp_labels, headers):
+    """Finds the header names for the snp labels
+
+    Arguments:
+        snp_labels: a numpy array with the snp labels to find
+        headers: a numpy array with the headers for all the snp columns
+
+    Returns:
+        snp_headers: a numpy array with the snp label names
+    """
+    snp_headers = None
+    return snp_headers
 
 def get_causing_epi_probs(y):
-    """Gets the 'causing epi' probabilities on a tensor containing predictions of whether snps are causing epi 
+    """Gets the 'causing epi' probabilities on a tensor containing predictions of whether snps are causing epi
 
     Arguments:
         y: the tensor to split
