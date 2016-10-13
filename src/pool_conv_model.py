@@ -3,7 +3,6 @@
 from __future__ import absolute_import, division, print_function
 
 import sys
-from math import sqrt
 
 import tensorflow as tf
 
@@ -138,7 +137,7 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
                 # save the model every time a new best accuracy is reached
                 if cost1 + cost2 <= 0.9*best_cost:
-                    best_cost = sqrt(cost1**2 + cost2**2)
+                    best_cost = cost1 + cost2
                     save_path = saver.save(sess, model_dir + 'convolutional_model')
                     print("saving model at iteration %i" % i)
 
