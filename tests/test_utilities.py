@@ -445,6 +445,49 @@ class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
             output_tensor = utilities.dropout(input_tensor)
             self.assertShapeEqual(output_tensor.get_shape(), [2, 3, 4, 5, 6])
 
+class DropoutLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
+    """Provides a test for checking that the dropout_layer function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the dropout_layer correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.zeros([2, 3, 4, 5, 6])
+            _ = utilities.dropout(input_tensor, name_suffix='1')
+            op_dict = {"dropout_1/Placeholder": "Placeholder", "dropout_1/dropout/mul": "Mul", "dropout_1/dropout/Floor": "Floor", "dropout_1/dropout/add": "Add", "dropout_1/dropout/Shape": "Shape", "dropout_1/dropout/Div": "Div"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
+
+class CalculateCrossEntropyLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
+    """Provides a test for checking that the calculate_cross_entropy function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the calculate_cross_entropy correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor1 = tf.convert_to_tensor([0.1, 0.9, 0.8])
+            input_tensor2 = tf.convert_to_tensor([0.2, 0.3, 0.7])
+            _ = utilities.calculate_cross_entropy(input_tensor1, input_tensor2, name_suffix='1')
+            op_dict = {"cross_entropy_1/add": "Add", "cross_entropy_1/Log": "Log", "cross_entropy_1/mul": "Mul", "cross_entropy_1/total/Mean": "Mean", "cross_entropy_1/total/Neg": "Neg"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
+
 class PredictSnpsCorrectlyFindsSnps(tf.test.TestCase):
     """Provides a test for checking that predict_snps is able to find the snps predicted correctly
 
