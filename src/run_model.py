@@ -6,7 +6,7 @@ import sys
 
 import tensorflow as tf
 
-import data_holder
+import data_holder as dh
 
 # import the various models which can be run
 import pool_conv_model
@@ -28,11 +28,11 @@ APP_FLAGS.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing t
 APP_FLAGS.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a binary file.')
 APP_FLAGS.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
 
-def train_model(dh):
+def train_model(data_holder):
     """A function that builds and trains the model.
 
     Arguments:
-            dh: a DataHolder object containing the data.
+            data_holder: a DataHolder object containing the data.
             log_file_path: a string indicating the directory to store the logs.
             max_steps: an integer describing the number of steps to run.
             train_batch_size: an integer describing the size of the training data.
@@ -46,9 +46,9 @@ def train_model(dh):
     """
 
     # get the data dimmensions
-    _, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
-    _, num_states_out1 = dh.get_training_data().get_output1_shape()
-    _, num_cols_out2, num_states_out2 = dh.get_training_data().get_output2_shape()
+    _, num_cols_in, num_states_in = data_holder.get_training_data().get_input_shape()
+    _, num_states_out1 = data_holder.get_training_data().get_output1_shape()
+    _, num_cols_out2, num_states_out2 = data_holder.get_training_data().get_output2_shape()
 
     # Input placeholders
     with tf.name_scope('input'):
@@ -60,7 +60,7 @@ def train_model(dh):
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    model = nonlinear_model.NonLinearModel(x, y1_, y2_, FLAGS.learning_rate)
+    model = pool_conv_model.PoolConvModel(x, y1_, y2_, FLAGS.learning_rate)
 
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
@@ -76,10 +76,10 @@ def train_model(dh):
         """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders.
         """
         if training:
-            xs, y1s, y2s = dh.get_training_data().next_batch(batch_size)
+            xs, y1s, y2s = data_holder.get_training_data().next_batch(batch_size)
             k = FLAGS.dropout
         else:
-            xs, y1s, y2s = dh.get_testing_data().next_batch(batch_size)
+            xs, y1s, y2s = data_holder.get_testing_data().next_batch(batch_size)
             k = 1.0
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
@@ -132,6 +132,14 @@ def train_model(dh):
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 def main(args):
+    """The main function which invokes the model_training function after reading the input data file.
+
+    Arguments:
+        args: command line arguments for the script.
+
+    Returns:
+        Nothing.
+    """
     # Set the random seed so that results will be reproducable.
     tf.set_random_seed(42)
 
@@ -147,31 +155,31 @@ def main(args):
 
     # Import data.
     print("Loading data from: %s" % FLAGS.file_in)
-    dh = data_holder.DataHolder()
+    data_holder = dh.DataHolder()
     if not FLAGS.read_binary:
         try:
-            dh.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
+            data_holder.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
         except IOError as excep:
             print("Unable to read from text file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
         if FLAGS.write_binary:
             try:
-                dh.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
+                data_holder.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
             except IOError as excep:
                 print("Unable to write to binary file")
                 print(excep)
                 sys.exit(2)
     else:
         try:
-            dh.read_from_npz(FLAGS.file_in)
+            data_holder.read_from_npz(FLAGS.file_in)
         except IOError as excep:
             print("Unable to read from binary file: %s" % FLAGS.file_in)
             print(excep)
             sys.exit(2)
 
     # Use the data to train a neural network.
-    train_model(dh)
+    train_model(data_holder)
 
 if __name__ == '__main__':
     tf.app.run()
