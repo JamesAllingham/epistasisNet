@@ -1,4 +1,4 @@
-"""This module is a convolutional model with pooling to test for epistasis on a GAMETES dataset
+"""This module trains a TensorFlow model.
 """
 from __future__ import absolute_import, division, print_function
 
