@@ -152,7 +152,7 @@ class FcLayerCorrectShapeTestCase(tf.test.TestCase):
             output_tensor = utilities.fc_layer(input_tensor, 30, 100)
             self.assertShapeEqual(output_tensor.get_shape(), [20, 100])
 
-class FcLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class FcLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the fc_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -214,7 +214,7 @@ class ReshapeCorrectlyFlattensTestCase(tf.test.TestCase):
             output_tensor = utilities.reshape(input_tensor, [-1, 600])
             self.assertShapeEqual(output_tensor.get_shape(), [1, 600])
 
-class ReshapeAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class ReshapeAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the reshape function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -298,7 +298,7 @@ class ConvLayerCorrectShapeSAMEPaddingAndStridingTestCase(tf.test.TestCase):
             output_tensor = utilities.conv_layer(input_tensor, [5, 5, 1, 5], padding='SAME', strides=[1, 2, 2, 1])
             self.assertShapeEqual(output_tensor.get_shape(), [10, 15, 5])
 
-class ConvLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class ConvLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the conv_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -402,7 +402,7 @@ class PoolLayerCorrectValueTestCase(tf.test.TestCase):
             output_tensor = utilities.pool_layer(input_tensor)
             self.assertAllEqual(output_tensor, [[[5, 6, 6], [8, 9, 9], [8, 9, 9]]])
 
-class PoolLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class PoolLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -424,7 +424,7 @@ class PoolLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
             tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
-    """Provides a test for checking that the dropout_layer does not change the shape of the input.mro
+    """Provides a test for checking that the dropout_layer does not change the shape of the input.
 
     Inherits from the tf.test.TestCase class.
     """
@@ -442,6 +442,49 @@ class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
             input_tensor = tf.zeros([2, 3, 4, 5, 6])
             output_tensor = utilities.dropout(input_tensor)
             self.assertShapeEqual(output_tensor.get_shape(), [2, 3, 4, 5, 6])
+
+class DropoutLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
+    """Provides a test for checking that the dropout_layer function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the dropout_layer correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.zeros([2, 3, 4, 5, 6])
+            _ = utilities.dropout(input_tensor, name_suffix='1')
+            op_dict = {"dropout_1/Placeholder": "Placeholder", "dropout_1/dropout/mul": "Mul", "dropout_1/dropout/Floor": "Floor", "dropout_1/dropout/add": "Add", "dropout_1/dropout/Shape": "Shape", "dropout_1/dropout/Div": "Div"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
+
+class CalculateCrossEntropyLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
+    """Provides a test for checking that the calculate_cross_entropy function adds correctly named operations to the graph.
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the calculate_cross_entropy correctly adds operations to the graph.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor1 = tf.convert_to_tensor([0.1, 0.9, 0.8])
+            input_tensor2 = tf.convert_to_tensor([0.2, 0.3, 0.7])
+            _ = utilities.calculate_cross_entropy(input_tensor1, input_tensor2, name_suffix='1')
+            op_dict = {"cross_entropy_1/add": "Add", "cross_entropy_1/Log": "Log", "cross_entropy_1/mul": "Mul", "cross_entropy_1/total/Mean": "Mean", "cross_entropy_1/total/Neg": "Neg"}
+            tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 if __name__ == '__main__':
     tf.test.main()
