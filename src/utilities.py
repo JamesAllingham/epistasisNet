@@ -325,21 +325,12 @@ def predict_snps(y, snps_to_predict, test=False):
     with tf.name_scope('snp_prediction'):
         y_left = get_causing_epi_probs(y)
         y_left_t = tf.transpose(y_left, [0, 2, 1])
-        if not test:
-            _, predicted_snps = tf.nn.top_k(y_left_t, snps_to_predict, name='find_top_snps')
-            reshaped = tf.reshape(predicted_snps, [-1])
-            top_pred_snps, _, count = tf.unique_with_counts(reshaped)
-            count = count + [0, 1, 0]
-            _, top_counts = tf.nn.top_k(count, 1, name='strip_low_values')
-            predictions = tf.gather(top_pred_snps, top_counts)
-            return top_pred_snps, count, predictions
-        else:
-            top_snps = tf.where(tf.greater_equal(y_left, 0.5))
-            print('top_snps: %s' % top_snps)
-            _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
-            top_snp_indices = tf.reshape(top_snp_indices, [-1])
-            top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
-            return top_pred_snps
+        top_snps = tf.where(tf.greater_equal(y_left, 0.5))
+        print('top_snps: %s' % top_snps)
+        _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
+        top_snp_indices = tf.reshape(top_snp_indices, [-1])
+        top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
+        return top_pred_snps
 
 def get_snp_headers(snp_labels, headers):
     """Finds the header names for the snp labels
