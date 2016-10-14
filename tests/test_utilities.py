@@ -4,9 +4,9 @@ These tests are not meant to retest the Tensorflow functionality, they are only 
 """
 
 import sys
+import unittest
 
 import numpy as np
-import unittest
 import tensorflow as tf
 
 sys.path.append("../src/")
@@ -445,8 +445,29 @@ class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
             output_tensor = utilities.dropout(input_tensor)
             self.assertShapeEqual(output_tensor.get_shape(), [2, 3, 4, 5, 6])
 
+class PredictSnpsCorrectlyFindsSnps(tf.test.TestCase):
+    """Provides a test for checking that predict_snps is able to find the snps predicted correctly
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def runTest(self):
+        """Asserts that the output snps are the ones with probabilities >=0.5 in the causes_epi element
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        with self.test_session():
+            input_tensor = tf.constant([[[0.5, 0.8], [0.2, 0.8], [0.9, 0.1]], [[0.2, 0.8], [0.49, 0.8], [0.51, 0.49]]])
+            self.assertShapeEqual(utilities.predict_snps(input_tensor), [0, 2])
+
 class GetOutputSnpHeaders(unittest.TestCase):
     """Provides a test for checking that the correct snp headers are returned from the snp numbers
+
+    Inherits from the unittest.TestCase class.
     """
     def runTest(self):
         """Asserts that the function get_snp_headers correctly fetches header names for the snps
