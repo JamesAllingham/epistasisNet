@@ -41,10 +41,11 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
             No return variables
     """
 
-    # get the data dimmensions
+    # get the data dimensions
     _, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
     _, num_states_out1 = dh.get_training_data().get_output1_shape()
     _, num_cols_out2, num_states_out2 = dh.get_training_data().get_output2_shape()
+    headers = dh.get_header_data()
 
     # Input placeholders
     with tf.name_scope('input'):
@@ -96,7 +97,8 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
     accuracy1 = utilities.calculate_epi_accuracy(y1, y1_, name_suffix='1')
     accuracy2 = utilities.calculate_snp_accuracy(y2, y2_, name_suffix='2')
 
-    predicted_snps = utilities.predict_snps(y2, 2)
+    # predicted_snps, count, rpedictions = utilities.predict_snps(y2, 3)
+    top_snps = utilities.predict_snps(y2, 3, True)
 
     # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
     merged = tf.merge_all_summaries()
@@ -161,10 +163,10 @@ def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learn
 
         saver.restore(sess, save_path)
 
-        best_acc1, best_acc2, pred_snps = sess.run([accuracy1, accuracy2, predicted_snps], feed_dict=feed_dict(False, None, None))
+        best_acc1, best_acc2, pred_snps = sess.run([accuracy1, accuracy2, top_snps], feed_dict=feed_dict(False, None, None))
+        epi_snp_names = utilities.get_snp_headers(pred_snps, headers)
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
-        # print("The snps predicted to cause epi were %s" % (pred_snps))
-
+        print("The snps predicted to cause epi were %s" % (epi_snp_names))
 
 def main(args):
     # Set the random seed so that results will be reproducable.

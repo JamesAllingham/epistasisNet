@@ -18,6 +18,7 @@ The following functions are avaialbe:
 """
 
 import tensorflow as tf
+import numpy as np
 from enum import Enum
 
 
@@ -338,7 +339,7 @@ def predict_snps(y, snps_to_predict, test=False):
             _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
             top_snp_indices = tf.reshape(top_snp_indices, [-1])
             top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
-            return top_pred_snps, count
+            return top_pred_snps
 
 def get_snp_headers(snp_labels, headers):
     """Finds the header names for the snp labels
@@ -350,11 +351,13 @@ def get_snp_headers(snp_labels, headers):
     Returns:
         snp_headers: a numpy array with the snp label names
     """
-    snp_headers = None
-    return snp_headers
+    snp_names = np.array([])
+    for snp in np.nditer(snp_labels):
+        snp_names = np.append(snp_names, headers[snp])
+    return snp_names
 
-def get_causing_epi_probs(y):
-    """Gets the 'causing epi' probabilities on a tensor containing predictions of whether snps are causing epi
+def get_causing_epi_probs(tensor_in):
+    """Gets the 'causing epi' probabilities on a (?, ?, 2) tensor containing predictions of whether snps are causing epi
 
     Arguments:
         y: the tensor to split
@@ -363,8 +366,8 @@ def get_causing_epi_probs(y):
         y_left: a tensor with the 'causing epi' probabilities
     """
     with tf.name_scope('split'):
-        y_left, _ = tf.split(2, 2, y, name='split')
-        return y_left
+        left, _ = tf.split(2, 2, tensor_in, name='split')
+        return left
 
 def variable_summaries(var, name):
     """Attach min, max, mean, and standard deviation summaries to a variable.
