@@ -6,3 +6,4 @@ MDR/*
 *.pyc
 BEAM/*
 *.json
+.vscode/*

@@ -1,183 +1,77 @@
-"""This module is a nonlinear model to test for epistasis on a GAMETES dataset
+"""This module supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
 """
-
 from __future__ import absolute_import, division, print_function
-
-import sys
-from math import sqrt
 
 import tensorflow as tf
 
-import data_holder
 import utilities
+import model
 
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-flags.DEFINE_string('file_in', '', 'data in file location')
-flags.DEFINE_float('tt_ratio', 0.8, 'test:train ratio')
-flags.DEFINE_integer('max_steps', 10000, 'maximum steps')
-flags.DEFINE_integer('batch_size', 100, 'training batch size')
-flags.DEFINE_integer('test_batch_size', 1000, 'testing batch size')
-flags.DEFINE_string('log_dir', '/tmp/logs/runx', 'Directory for storing data')
-flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate')
-flags.DEFINE_float('dropout', 0.9, 'Keep probability for training dropout')
-flags.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
-flags.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a binary file.')
-flags.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
+class NonLinearModel(model.Model):
+    """A class which builds a TensorFlow graph for a deep neural network with only non-linear fully connected layers.
 
-def train(dh, log_file_path, max_steps, train_batch_size, test_batch_size, learning_rate, dropout_rate, model_dir):
-    """A function that builds and trains the model
+    The network structure is as follows:
 
-    Arguments:
-            dh: a DataHolder object containing the data
-            log_file_path: a string indicating the directory to store the logs
-            max_steps: an integer describing the number of steps to run
-            train_batch_size: an integer describing the size of the training data
-            test_batch_size: an integer describing the size of the testing data
-            learning_rate: an integer describing the initial learning rate for the optimizer
-            dropout_rate: an integer describing the dropout rate
-            model_dir: a string indicating the directory to store the model
-
-        Returns:
-            No return variables
+    input --> reshape --> hidden --> softmax
+                                 --> softmax
+    [?, x, 3] --> [?, 3x] --> [?, 6x] --> [?, 2, 1]
+                                      --> [?, 2, x]
     """
 
-    # get the data dimmensions
-    _, num_cols_in, num_states_in = dh.get_training_data().get_input_shape()
-    _, num_states_out1 = dh.get_training_data().get_output1_shape()
-    _, num_cols_out2, num_states_out2 = dh.get_training_data().get_output2_shape()
+    def __init__(self, x, y1_, y2_, learning_rate):
+        """Creates a LinearModel.
 
-  # Input placeholders
-    with tf.name_scope('input'):
-        x = tf.placeholder(tf.float32, [None, num_cols_in, num_states_in], name='x-input')
-        y1_ = tf.placeholder(tf.float32, [None, num_states_out1], name='y-input1')
-        y2_ = tf.placeholder(tf.float32, [None, num_cols_out2, num_states_out2], name='y-input2')
+        Inherits from Model.
 
-    x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
+        Parameters:
+            x: the placeholder for the input tensor.
+            y1_: the placeholder for the output 1 tensor.
+            y2_: the placeholder for the output 2 tensor.
 
-    hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, 1000, layer_name='hidden_1')
-    hidden2 = utilities.fc_layer(hidden1, 1000, 500, layer_name='hidden_2')
-
-    dropped, keep_prob = utilities.dropout(hidden2)
-
-    y1 = utilities.fc_layer(dropped, 500, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
-    y2 = tf.nn.softmax(utilities.reshape(utilities.fc_layer(dropped, 500, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity), [-1, num_cols_out2, num_states_out2]), name='softmax_2')
-
-    loss1 = utilities.calculate_cross_entropy(y1, y1_, name_suffix='1')
-    loss2 = utilities.calculate_cross_entropy(y2, y2_, name_suffix='2')
-
-    train_step1 = utilities.train(learning_rate, loss1, training_method=utilities.Optimizer.Adam, name_suffix='1')
-    train_step2 = utilities.train(learning_rate, loss2, training_method=utilities.Optimizer.Adam, name_suffix='2')
-
-    accuracy1 = utilities.calculate_epi_accuracy(y1, y1_, name_suffix='1')
-    # accuracy2 = utilities.calculate_epi_accuracy(y2, y2_, name_suffix='2')
-    accuracy2 = utilities.calculate_snp_accuracy(y2, y2_, name_suffix='2')
-
-    # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
-    merged = tf.merge_all_summaries()
-
-    # Train the model, and also write summaries.
-    # Every 10th step, measure test-set accuracy, and write test summaries
-    # All other steps, run train_step on training data, & add training summaries
-    def feed_dict(training, train_batch_size, test_batch_size):
-        """ Make a TensorFlow feed_dict: maps data onto Tensor placeholders. 
+        Returns:
+            A LinearModel object.
         """
-        if training:
-            xs, y1s, y2s = dh.get_training_data().next_batch(train_batch_size)
-            k = dropout_rate
-        else:
-            xs, y1s, y2s = dh.get_testing_data().next_batch(test_batch_size)
-            k = 1.0
-        return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
+        model.Model.__init__(self)
 
-    with tf.Session() as sess:
+        # get sizes for the input and outputs
+        num_cols_in = x.get_shape().as_list()[1]
+        num_states_in = x.get_shape().as_list()[2]
+        num_states_out1 = y1_.get_shape().as_list()[1]
+        num_cols_out2 = y2_.get_shape().as_list()[1]
+        num_states_out2 = y2_.get_shape().as_list()[2]
 
-        # Create a saver.
-        saver = tf.train.Saver()
+        # the first layer flattens the data so that it can be passed through a fully connected layer
+        x_flat = utilities.reshape(x, [-1, num_cols_in*num_states_in])
 
-        train_writer = tf.train.SummaryWriter(log_file_path + '/train', sess.graph)
-        test_writer = tf.train.SummaryWriter(log_file_path + '/test')
+        hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, num_cols_in*num_states_in*4, layer_name='hidden_1')
+        hidden2 = utilities.fc_layer(hidden1, num_cols_in*num_states_in*4, num_cols_in*num_states_in*2, layer_name='hidden_2')
 
-        sess.run(tf.initialize_all_variables())
-        save_path = ''
+        # the dropout layer reduces over fitting
+        dropped, self._keep_prob = utilities.dropout(hidden2)
 
-        best_cost = float('inf')
-        for i in range(max_steps):
+        # the network splits here:
+        # the first softmax layer reduces the output to a percentage chance for each of the output states
+        output1 = utilities.fc_layer(dropped, 2*num_cols_in*num_states_in, num_states_out1, 'softmax_1', act=tf.nn.softmax)
 
-            if i % 10 == 0:  # Record summaries and test-set accuracy
-                summary, acc1, acc2, cost1, cost2 = sess.run([merged, accuracy1, accuracy2, loss1, loss2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
-                test_writer.add_summary(summary, i)
-                print('Accuracy at step %s for output 1: %f' % (i, acc1))
-                print('Accuracy at step %s for output 2: %f' % (i, acc2))
-                print('Cost at step %s for output 1: %f' % (i, cost1))
-                print('Cost at step %s for output 2: %f' % (i, cost2))
+        # the second softmax layer reduces the output to a percentage chance for each SNPs output states
+        with tf.name_scope('softmax_2'):
+            fc_layer = utilities.fc_layer(dropped, 2*num_cols_in*num_states_in, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
+            output2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
-                # save the model every time a new best accuracy is reached
-                if sqrt(cost1**2 + cost2**2) <= best_cost:
-                    best_cost = sqrt(cost1**2 + cost2**2)
-                    save_path = saver.save(sess, model_dir + 'nonlinear_model')
-                    print("saving model at iteration %i" % i)
+        # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
+        self._loss1 = utilities.calculate_cross_entropy(output1, y1_, name_suffix='1')
+        self._loss2 = utilities.calculate_cross_entropy(output2, y2_, name_suffix='2')
+        # these losses are compined into one for the training
+        with tf.name_scope('combined_loss'):
+            combined_loss = tf.add(self._loss1, self._loss2)
 
-            else:  # Record train set summaries, and train
-                if i % 100 == 99:  # Record execution stats
-                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                    run_metadata = tf.RunMetadata()
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size), options=run_options, run_metadata=run_metadata)
-                    train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
-                    train_writer.add_summary(summary, i)
-                    print('Adding run metadata for', i)
-                else:  # Record a summary
-                    summary, _, _ = sess.run([merged, train_step1, train_step2], feed_dict=feed_dict(True, train_batch_size, test_batch_size))
-                    train_writer.add_summary(summary, i)
+        # the loss is used with the back propagtion algorithm to use gradient descent based ADAM optimization to teach the network
+        self._train_step = utilities.train(learning_rate, combined_loss, training_method=utilities.Optimizer.Adam, name_suffix='1')
 
-        train_writer.close()
-        test_writer.close()
+        # the accuracies for each output are calculated by comparing them to the correct outputs
+        self._accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
+        self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, name_suffix='2')
 
-        saver.restore(sess, save_path)
-
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, train_batch_size, test_batch_size))
-        print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
-
-
-def main(args):
-    tf.set_random_seed(42)
-
-    # Try get user input
-    if not FLAGS.file_in:
-        print("Please specify the input file using the '--file_in=' flag.")
-        sys.exit(2)
-    if tf.gfile.Exists(FLAGS.log_dir):
-        tf.gfile.DeleteRecursively(FLAGS.log_dir)
-    tf.gfile.MakeDirs(FLAGS.log_dir)
-    if not tf.gfile.Exists(FLAGS.model_dir):
-        tf.gfile.MakeDirs(FLAGS.model_dir)
-
-    # Import data.
-    print("Loading data from: %s" % FLAGS.file_in)
-    dh = data_holder.DataHolder()
-    if not FLAGS.read_binary:
-        try:
-            dh.read_from_txt(FLAGS.file_in, FLAGS.tt_ratio, 1)
-        except IOError as excep:
-            print("Unable to read from text file: %s" % FLAGS.file_in)
-            print(excep)
-            sys.exit(2)
-        if FLAGS.write_binary:
-            try:
-                dh.write_to_binary(FLAGS.file_in.replace('.txt', '.npz'))
-            except IOError as excep:
-                print("Unable to write to binary file")
-                print(excep)
-                sys.exit(2)
-    else:
-        try:
-            dh.read_from_npz(FLAGS.file_in)
-        except IOError as excep:
-            print("Unable to read from binary file: %s" % FLAGS.file_in)
-            print(excep)
-            sys.exit(2)
-
-    train(dh, FLAGS.log_dir, FLAGS.max_steps, FLAGS.batch_size, FLAGS.test_batch_size, FLAGS.learning_rate, FLAGS.dropout, FLAGS.model_dir)
-
-if __name__ == '__main__':
-    tf.app.run()
+        # merge all the summaries
+        self._merged = tf.merge_all_summaries()
+        

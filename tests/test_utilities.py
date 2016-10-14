@@ -154,7 +154,7 @@ class FcLayerCorrectShapeTestCase(tf.test.TestCase):
             output_tensor = utilities.fc_layer(input_tensor, 30, 100)
             self.assertShapeEqual(output_tensor.get_shape(), [20, 100])
 
-class FcLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class FcLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the fc_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -216,7 +216,7 @@ class ReshapeCorrectlyFlattensTestCase(tf.test.TestCase):
             output_tensor = utilities.reshape(input_tensor, [-1, 600])
             self.assertShapeEqual(output_tensor.get_shape(), [1, 600])
 
-class ReshapeAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class ReshapeAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the reshape function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -300,7 +300,7 @@ class ConvLayerCorrectShapeSAMEPaddingAndStridingTestCase(tf.test.TestCase):
             output_tensor = utilities.conv_layer(input_tensor, [5, 5, 1, 5], padding='SAME', strides=[1, 2, 2, 1])
             self.assertShapeEqual(output_tensor.get_shape(), [10, 15, 5])
 
-class ConvLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class ConvLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the conv_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -404,7 +404,7 @@ class PoolLayerCorrectValueTestCase(tf.test.TestCase):
             output_tensor = utilities.pool_layer(input_tensor)
             self.assertAllEqual(output_tensor, [[[5, 6, 6], [8, 9, 9], [8, 9, 9]]])
 
-class PoolLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
+class PoolLayerAddsCorrectlyNamedOperationsToGraphTestCase(tf.test.TestCase):
     """Provides a test for checking that the pool_layer function adds correctly named operations to the graph.
 
     Inherits from the tf.test.TestCase class.
@@ -426,7 +426,7 @@ class PoolLayerAddsCorrectlyNamedOperationsToGraph(tf.test.TestCase):
             tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
 class DropoutLayerCorrectShapeTestCase(tf.test.TestCase):
-    """Provides a test for checking that the dropout_layer does not change the shape of the input.mro
+    """Provides a test for checking that the dropout_layer does not change the shape of the input.
 
     Inherits from the tf.test.TestCase class.
     """
