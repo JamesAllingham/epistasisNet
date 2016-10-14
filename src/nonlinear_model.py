@@ -45,7 +45,7 @@ class NonLinearModel(model.Model):
 
         hidden1 = utilities.fc_layer(x_flat, num_cols_in*num_states_in, num_cols_in*num_states_in*4, layer_name='hidden_1')
         hidden2 = utilities.fc_layer(hidden1, num_cols_in*num_states_in*4, num_cols_in*num_states_in*2, layer_name='hidden_2')
-        
+
         # the dropout layer reduces over fitting
         dropped, self._keep_prob = utilities.dropout(hidden2)
 
