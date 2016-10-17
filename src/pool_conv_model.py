@@ -97,5 +97,8 @@ class PoolConvModel(model.Model):
         self._accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
         self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, name_suffix='2')
 
+        # find the top predicted snps
+        self._epi_snps, self._count = utilities.predict_snps(output2)
+
         # merge all the summaries
         self._merged = tf.merge_all_summaries()
