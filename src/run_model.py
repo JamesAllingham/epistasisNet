@@ -9,6 +9,7 @@ import tensorflow as tf
 import data_holder as dh
 
 # import the various models which can be run
+import scaling_model
 import pool_conv_model
 import convolutional_model
 import nonlinear_model
@@ -83,16 +84,18 @@ def train_model(data_holder):
             k = 1.0
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
-    with tf.Session() as sess:
+    config = tf.ConfigProto(log_device_placement=True)
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.1
+    with tf.Session(config=config) as sess:
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
-        saver = tf.train.Saver()
+        # saver = tf.train.Saver()
 
         train_writer = tf.train.SummaryWriter(FLAGS.log_dir + '/train', sess.graph)
         test_writer = tf.train.SummaryWriter(FLAGS.log_dir + '/test')
 
         sess.run(tf.initialize_all_variables())
-        save_path = ''
+        # save_path = ''
 
         best_cost = float('inf')
         for i in range(FLAGS.max_steps):
@@ -108,8 +111,8 @@ def train_model(data_holder):
                 # save the model every time a new best accuracy is reached
                 if cost1 + cost2 <= 0.9*best_cost:
                     best_cost = cost1 + cost2
-                    save_path = saver.save(sess, FLAGS.model_dir + 'model')
-                    print("saving model at iteration %i" % i)
+                    # save_path = saver.save(sess, FLAGS.model_dir + 'model')
+                    # print("saving model at iteration %i" % i)
 
             else:  # Record train set summaries, and train
                 if i % 100 == 99:  # Record execution stats
@@ -126,10 +129,10 @@ def train_model(data_holder):
         train_writer.close()
         test_writer.close()
 
-        saver.restore(sess, save_path)
+        # saver.restore(sess, save_path)
 
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None))
-        print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
+        # best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None))
+        # print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
 
 def main(args):
     """The main function which invokes the model_training function after reading the input data file.
