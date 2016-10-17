@@ -10,6 +10,7 @@ import data_holder as dh
 import utilities
 
 # import the various models which can be run
+import recurrent_model
 import scaling_model
 import pool_conv_model
 import convolutional_model
@@ -62,7 +63,7 @@ def train_model(data_holder):
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    model = pool_conv_model.PoolConvModel(x, y1_, y2_, FLAGS.learning_rate)
+    model = recurrent_model.RecurrentModel(x, y1_, y2_, FLAGS.learning_rate)
 
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
