@@ -1,4 +1,4 @@
-"""This module supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
+"""This module supplies a fully connected model with nonlinearities to test for epistasis on a GAMETES dataset
 """
 from __future__ import absolute_import, division, print_function
 
@@ -19,7 +19,7 @@ class NonLinearModel(model.Model):
     """
 
     def __init__(self, x, y1_, y2_, learning_rate):
-        """Creates a LinearModel.
+        """Creates a NonLinearModel.
 
         Inherits from Model.
 
@@ -29,7 +29,7 @@ class NonLinearModel(model.Model):
             y2_: the placeholder for the output 2 tensor.
 
         Returns:
-            A LinearModel object.
+            A NonLinearModel object.
         """
         model.Model.__init__(self)
 
