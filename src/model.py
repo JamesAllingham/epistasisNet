@@ -23,6 +23,8 @@ class Model(object):
         self._merged = None
         self._train_step = None
         self._keep_prob = None
+        self._epi_snps = None
+        self._count = None
 
     def get_accuracies(self):
         """Returns sessions to run in order to get the accuracies for each of the outputs.
@@ -34,6 +36,17 @@ class Model(object):
             (accuracy1, accuracy2) - TensorFlow sessions which return the accuracies for output 1 and output 2 respectively.
         """
         return self._accuracy1, self._accuracy2
+
+    def get_snp_predictions(self):
+        """Returns sessions to run in order to get the snp predictions for the output.
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            (epi_snps, count) - TensorFlow sessions which return the indices of the predicted snps and their frequency.
+        """
+        return self._epi_snps, self._count
 
     def get_losses(self):
         """Returns sessions to run in order to get the lesses for each of the outputs.
