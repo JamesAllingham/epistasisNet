@@ -84,9 +84,7 @@ def train_model(data_holder):
             k = 1.0
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
-    config = tf.ConfigProto(log_device_placement=True)
-    # config.gpu_options.per_process_gpu_memory_fraction = 0.1
-    with tf.Session(config=config) as sess:
+    with tf.Session() as sess:
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
         # saver = tf.train.Saver()
