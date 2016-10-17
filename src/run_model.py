@@ -7,6 +7,7 @@ import sys
 import tensorflow as tf
 
 import data_holder as dh
+import utilities
 
 # import the various models which can be run
 import pool_conv_model
@@ -65,6 +66,7 @@ def train_model(data_holder):
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
     accuracy1, accuracy2 = model.get_accuracies()
+    epi_snps, count = model.get_snp_predictions()
     merged = model.get_merged()
     train_step = model.get_train_step()
 
@@ -128,8 +130,11 @@ def train_model(data_holder):
 
         saver.restore(sess, save_path)
 
-        best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None))
+        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None))
+        epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
+        print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
+        print("Their respective occurrance counts are %s" % epi_snp_counts)
 
 def main(args):
     """The main function which invokes the model_training function after reading the input data file.
