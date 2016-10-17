@@ -7,6 +7,7 @@ import sys
 import tensorflow as tf
 
 import data_holder as dh
+import utilities
 
 # import the various models which can be run
 import scaling_model
@@ -66,6 +67,7 @@ def train_model(data_holder):
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
     accuracy1, accuracy2 = model.get_accuracies()
+    epi_snps, count = model.get_snp_predictions()
     merged = model.get_merged()
     train_step = model.get_train_step()
 
@@ -87,13 +89,13 @@ def train_model(data_holder):
     with tf.Session() as sess:
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         train_writer = tf.train.SummaryWriter(FLAGS.log_dir + '/train', sess.graph)
         test_writer = tf.train.SummaryWriter(FLAGS.log_dir + '/test')
 
         sess.run(tf.initialize_all_variables())
-        # save_path = ''
+        save_path = ''
 
         best_cost = float('inf')
         for i in range(FLAGS.max_steps):
@@ -109,8 +111,8 @@ def train_model(data_holder):
                 # save the model every time a new best accuracy is reached
                 if cost1 + cost2 <= 0.9*best_cost:
                     best_cost = cost1 + cost2
-                    # save_path = saver.save(sess, FLAGS.model_dir + 'model')
-                    # print("saving model at iteration %i" % i)
+                    save_path = saver.save(sess, FLAGS.model_dir + 'model')
+                    print("saving model at iteration %i" % i)
 
             else:  # Record train set summaries, and train
                 if i % 100 == 99:  # Record execution stats
@@ -127,10 +129,12 @@ def train_model(data_holder):
         train_writer.close()
         test_writer.close()
 
-        # saver.restore(sess, save_path)
-
-        # best_acc1, best_acc2 = sess.run([accuracy1, accuracy2], feed_dict=feed_dict(False, None))
-        # print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
+        saver.restore(sess, save_path)
+        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None))
+        epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
+        print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
+        print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
+        print("Their respective occurrance counts are %s" % epi_snp_counts)
 
 def main(args):
     """The main function which invokes the model_training function after reading the input data file.

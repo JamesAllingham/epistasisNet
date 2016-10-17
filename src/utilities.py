@@ -294,7 +294,7 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
         with tf.name_scope('predictions'):
             # find indices of predictions >.5
             predicted_snps = tf.where(tf.greater_equal(y_left, 0.5))
-            # tf.gather_nd on labels_left to get a 0s/1s tensor -> stored at [0] on shape (2)
+            # tf.gather_nd on labels_left to get a 0s/1s tensor -> size stored at [0] on shape (2)
             prediction_results = tf.gather_nd(labels_left, predicted_snps)
             shape_of_output = tf.shape(prediction_results)
         # find number of 1s -> stored at [0] on shape (2)
@@ -313,12 +313,11 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
         tf.scalar_summary('snp_accuracy_'+name_suffix, accuracy)
         return accuracy
 
-def predict_snps(y, snps_to_predict, test=False):
+def predict_snps(y):
     """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
 
     Arguments:
         y: the given output tensor
-        snps_to_predict: an integer defining the number of snps to return
 
     Returns:
         predicted_snps: a tensor with the indices of the predicted snps
@@ -331,10 +330,10 @@ def predict_snps(y, snps_to_predict, test=False):
         _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
         top_snp_indices = tf.reshape(top_snp_indices, [-1])
         top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
-        return top_pred_snps
+        return top_pred_snps, count
 
 def get_snp_headers(snp_labels, headers):
-    """Finds the header names for the snp labels
+    """Python funtion to find the header names for the snp labels
 
     Arguments:
         snp_labels: a numpy array with the snp labels to find
