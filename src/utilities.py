@@ -267,12 +267,12 @@ def calculate_epi_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
     Returns:
         a scalar describing the accuracy of the given output when compared with the expected output.
     """
-    with tf.name_scope('epi_accuracy_'+name_suffix):
+    with tf.name_scope('accuracy_epi_'+name_suffix):
         with tf.name_scope('correct_prediction'):
             correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-        with tf.name_scope('epi_accuracy'):
+        with tf.name_scope('accuracy_epi'):
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            tf.scalar_summary('epi_accuracy_'+name_suffix, accuracy)
+            tf.scalar_summary('accuracy_epi_'+name_suffix, accuracy)
         return accuracy
 
 def calculate_snp_accuracy(y, y_, name_suffix='1'):
@@ -288,7 +288,7 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
     """
 
     # split y, labels
-    with tf.name_scope('snp_accuracy_'+name_suffix):
+    with tf.name_scope('accuracy_snp_'+name_suffix):
         y_left = get_causing_epi_probs(y)
         labels_left = get_causing_epi_probs(y_)
         with tf.name_scope('predictions'):
@@ -308,9 +308,9 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
         with tf.name_scope('all_predictions'):
             all_predictions = number_of_ones_labels - correct_predictions + shape_of_output
         # accuracy = correct_predictions / all_predictions -> stored at [0] on shape (2)
-        with tf.name_scope('snp_accuracy'):
+        with tf.name_scope('accuracy_snp'):
             accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
-        tf.scalar_summary('snp_accuracy_'+name_suffix, accuracy)
+        tf.scalar_summary('accuracy_snp_'+name_suffix, accuracy)
         return accuracy
 
 def predict_snps(y):
