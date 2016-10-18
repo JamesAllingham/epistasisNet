@@ -30,6 +30,7 @@ APP_FLAGS.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout')
 APP_FLAGS.DEFINE_string('model_dir', '/tmp/tf_models/', 'Directory for storing the saved models')
 APP_FLAGS.DEFINE_bool('write_binary', True, 'Write the processed numpy array to a binary file.')
 APP_FLAGS.DEFINE_bool('read_binary', True, 'Read a binary file rather than a text file.')
+APP_FLAGS.DEFINE_bool('save_model', True, 'Save the best model asa the training progresses.')
 
 def train_model(data_holder):
     """A function that builds and trains the model.
@@ -110,7 +111,7 @@ def train_model(data_holder):
                 print('Cost at step %s for output 2: %f' % (i, cost2))
 
                 # save the model every time a new best accuracy is reached
-                if cost1 + cost2 <= 0.9*best_cost:
+                if cost1 + cost2 <= 0.9*best_cost and FLAGS.save_model:
                     best_cost = cost1 + cost2
                     save_path = saver.save(sess, FLAGS.model_dir + 'model')
                     print("saving model at iteration %i" % i)
@@ -130,7 +131,9 @@ def train_model(data_holder):
         train_writer.close()
         test_writer.close()
 
-        saver.restore(sess, save_path)
+        if FLAGS.save_model:
+            saver.restore(sess, save_path)
+
         best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None))
         epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
