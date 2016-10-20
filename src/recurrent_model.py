@@ -31,13 +31,19 @@ class RecurrentModel(model.Model):
         """
         model.Model.__init__(self)
 
+        # max_length = 100
+        #
+        # print("x shape: %s" % x.get_shape())
+        # x = utilities.reshape(x, [-1, max_length, int(x.get_shape()[2])])
+        # print("x shape: %s" % x.get_shape())
+
         # get sizes for the input and outputs
         num_states_out1 = y1_.get_shape().as_list()[1]
         num_cols_out2 = y2_.get_shape().as_list()[1]
         num_states_out2 = y2_.get_shape().as_list()[2]
 
         # parameters for the RNN
-        num_neurons = 100
+        num_neurons = 10
         num_layers = 1
         self._keep_prob = tf.placeholder(tf.float32)
 
@@ -46,24 +52,31 @@ class RecurrentModel(model.Model):
         cell = DropoutWrapper(cell, output_keep_prob=self._keep_prob)
         cell = MultiRNNCell([cell] * num_layers)
 
-        output, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32)
+        output, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, swap_memory=True, parallel_iterations=1)
+
+        print("output shape: %s" % output.get_shape())
 
         output = tf.transpose(output, [1, 0, 2])
+
+        print("output shape: %s" % output.get_shape())
+
         last = tf.gather(output, int(output.get_shape()[0]) - 1)
 
-        hidden1 = utilities.fc_layer(last, num_neurons, num_neurons*2, layer_name='hidden_1')
-        hidden2 = utilities.fc_layer(hidden1, num_neurons*2, num_neurons*2, layer_name='hidden_2')
+        print("last shape: %s" % last.get_shape())
+
+        hidden1 = utilities.fc_layer(last, num_neurons, num_neurons, layer_name='hidden_1')
+        hidden2 = utilities.fc_layer(hidden1, num_neurons, num_neurons, layer_name='hidden_2')
 
         # the dropout layer reduces over fitting
         dropped, _ = utilities.dropout(hidden2, keep_prob=self._keep_prob)
 
         # the network splits here:
         # the first softmax layer reduces the output to a percentage chance for each of the output states
-        output1 = utilities.fc_layer(dropped, num_neurons*2, num_states_out1, 'softmax_1', act=tf.nn.softmax)
+        output1 = utilities.fc_layer(dropped, num_neurons, num_states_out1, 'softmax_1', act=tf.nn.softmax)
 
         # the second softmax layer reduces the output to a percentage chance for each SNPs output states
         with tf.name_scope('softmax_2'):
-            fc_layer = utilities.fc_layer(dropped, num_neurons*2, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
+            fc_layer = utilities.fc_layer(dropped, num_neurons, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
             output2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
         # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
