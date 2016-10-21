@@ -275,12 +275,17 @@ def calculate_epi_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
             tf.scalar_summary('accuracy_epi_'+name_suffix, accuracy)
         return accuracy
 
-def calculate_snp_accuracy(y, y_, name_suffix='1'):
+def calculate_snp_accuracy(y, y_, cut_off_prob, already_split=False, name_suffix='1'):
     """Compares the snp output of the neural network with the expected snp output and returns the accuracy.
 
     Arguments:
         y: the given output tensor.
         y_: the expected output tensor.
+        cut_off_prob: float describing the cutoff probability for a snp to be described as predicted to cause.
+                            Recommended Values:
+                            0.5 for 2-classifier model
+                            0.98 for 1-classifier model
+        already_split: Bool defaulting as False. Describes whether model is 2-classifer (False) or 1-classifier (True).
         name_suffix: the suffix of the name for the graph visualization. The default value is '1'.
 
     Returns:
@@ -289,11 +294,14 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
 
     # split y, labels
     with tf.name_scope('accuracy_snp_'+name_suffix):
-        y_left = get_causing_epi_probs(y)
+        if not already_split:
+            y_left = get_causing_epi_probs(y)
+        else:
+            y_left = y
         labels_left = get_causing_epi_probs(y_)
         with tf.name_scope('predictions'):
             # find indices of predictions >.5
-            predicted_snps = tf.where(tf.greater_equal(y_left, 0.5))
+            predicted_snps = tf.where(tf.greater_equal(y_left, cut_off_prob))
             # tf.gather_nd on labels_left to get a 0s/1s tensor -> size stored at [0] on shape (2)
             prediction_results = tf.gather_nd(labels_left, predicted_snps)
             shape_of_output = tf.shape(prediction_results)
@@ -311,22 +319,34 @@ def calculate_snp_accuracy(y, y_, name_suffix='1'):
         with tf.name_scope('accuracy_snp'):
             accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
         tf.scalar_summary('accuracy_snp_'+name_suffix, accuracy)
-        return accuracy
+        return accuracy, y
 
-def predict_snps(y):
+def predict_snps(y, cut_off_prob, already_split=False):
     """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
 
     Arguments:
         y: the given output tensor
+        cut_off_prob: float describing the cutoff probability for a snp to be described as predicted to cause.
+                            Recommended Values:
+                            0.5 for 2-classifier model
+                            0.98 for 1-classifier model
 
     Returns:
         predicted_snps: a tensor with the indices of the predicted snps
     """
     with tf.name_scope('snp_prediction'):
-        y_left = get_causing_epi_probs(y)
+        if not already_split:
+            y_left = get_causing_epi_probs(y)
+        else:
+            y_left = y
         y_left_t = tf.transpose(y_left, [0, 2, 1])
+<<<<<<< HEAD
         top_snps = tf.where(tf.greater_equal(y_left, 0.5))
         # print('top_snps: %s' % top_snps)
+=======
+        top_snps = tf.where(tf.greater_equal(y_left, cut_off_prob))
+        print('top_snps: %s' % top_snps)
+>>>>>>> b18b67a14c8173a733b7184841061807225cda59
         _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
         top_snp_indices = tf.reshape(top_snp_indices, [-1])
         top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
