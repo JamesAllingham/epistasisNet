@@ -319,7 +319,7 @@ def calculate_snp_accuracy(y, y_, cut_off_prob, already_split=False, name_suffix
         with tf.name_scope('accuracy_snp'):
             accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
         tf.scalar_summary('accuracy_snp_'+name_suffix, accuracy)
-        return accuracy, y
+        return accuracy
 
 def predict_snps(y, cut_off_prob, already_split=False):
     """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
