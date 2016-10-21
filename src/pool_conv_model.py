@@ -96,7 +96,7 @@ class PoolConvModel(model.Model):
 
         # the accuracies for each output are calculated by comparing them to the correct outputs
         self._accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
-        self._accuracy2, self._output2 = utilities.calculate_snp_accuracy(output2, y2_, cut_off_prob=0.98, already_split=True, name_suffix='2')
+        self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, cut_off_prob=0.98, already_split=True, name_suffix='2')
 
         # find the top predicted snps
         self._epi_snps, self._count = utilities.predict_snps(output2, cut_off_prob=0.98, already_split=True)
