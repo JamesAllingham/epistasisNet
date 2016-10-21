@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import tensorflow as tf
+from tensorflow.python.client import timeline
 
 import data_holder as dh
 import utilities
@@ -124,6 +125,7 @@ def train_model(data_holder):
                     train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
                     train_writer.add_summary(summary, i)
                     print('Adding run metadata for', i)
+
                 else:  # Record a summary
                     summary, _ = sess.run([merged, train_step], feed_dict=feed_dict(True, FLAGS.train_batch_size))
                     train_writer.add_summary(summary, i)
@@ -134,11 +136,18 @@ def train_model(data_holder):
         if FLAGS.save_model:
             saver.restore(sess, save_path)
 
-        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None))
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        run_metadata = tf.RunMetadata()
+        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None), options=run_options, run_metadata=run_metadata)
         epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
         print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
         print("Their respective occurrance counts are %s" % epi_snp_counts)
+        
+        tl = timeline.Timeline(run_metadata.step_stats)
+        # print(tl.generate_chrome_trace_format(show_memory=True))
+        trace_file = tf.gfile.Open(name='../data/timeline', mode='w')
+        trace_file.write(tl.generate_chrome_trace_format(show_memory=True))
 
 def main(args):
     """The main function which invokes the model_training function after reading the input data file.
