@@ -38,13 +38,6 @@ def train_model(data_holder):
 
     Arguments:
             data_holder: a DataHolder object containing the data.
-            log_file_path: a string indicating the directory to store the logs.
-            max_steps: an integer describing the number of steps to run.
-            train_batch_size: an integer describing the size of the training data.
-            test_batch_size: an integer describing the size of the testing data.
-            learning_rate: an integer describing the initial learning rate for the optimizer.
-            dropout_rate: an integer describing the dropout rate.
-            model_dir: a string indicating the directory to store the model.
 
         Returns:
             Nothing.
@@ -112,7 +105,7 @@ def train_model(data_holder):
                 print('Cost at step %s for output 2: %f' % (i, cost2))
 
                 # save the model every time a new best accuracy is reached
-                if cost1 + cost2 <= 0.9*best_cost and FLAGS.save_model:
+                if cost1 + cost2 <= best_cost and FLAGS.save_model:
                     best_cost = cost1 + cost2
                     save_path = saver.save(sess, FLAGS.model_dir + 'model')
                     print("saving model at iteration %i" % i)
