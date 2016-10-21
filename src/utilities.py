@@ -340,13 +340,7 @@ def predict_snps(y, cut_off_prob, already_split=False):
         else:
             y_left = y
         y_left_t = tf.transpose(y_left, [0, 2, 1])
-<<<<<<< HEAD
-        top_snps = tf.where(tf.greater_equal(y_left, 0.5))
-        # print('top_snps: %s' % top_snps)
-=======
         top_snps = tf.where(tf.greater_equal(y_left, cut_off_prob))
-        print('top_snps: %s' % top_snps)
->>>>>>> b18b67a14c8173a733b7184841061807225cda59
         _, top_snp_indices, _ = tf.split(1, 3, top_snps, name='split')
         top_snp_indices = tf.reshape(top_snp_indices, [-1])
         top_pred_snps, _, count = tf.unique_with_counts(top_snp_indices)
