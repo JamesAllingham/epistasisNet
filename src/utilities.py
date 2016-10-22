@@ -275,7 +275,7 @@ def calculate_epi_accuracy(y, y_, snps_to_check=0, name_suffix='1'):
             tf.scalar_summary('accuracy_epi_'+name_suffix, accuracy)
         return accuracy
 
-def calculate_snp_accuracy(y, y_, cut_off_prob, already_split=False, name_suffix='1'):
+def calculate_snp_accuracy(y, y_, cut_off_prob=0.5, already_split=False, name_suffix='1'):
     """Compares the snp output of the neural network with the expected snp output and returns the accuracy.
 
     Arguments:
@@ -319,9 +319,9 @@ def calculate_snp_accuracy(y, y_, cut_off_prob, already_split=False, name_suffix
         with tf.name_scope('accuracy_snp'):
             accuracy = (tf.cast(correct_predictions, tf.float32) / tf.cast(all_predictions, tf.float32))[0]
         tf.scalar_summary('accuracy_snp_'+name_suffix, accuracy)
-        return accuracy, y
+        return accuracy
 
-def predict_snps(y, cut_off_prob, already_split=False):
+def predict_snps(y, cut_off_prob=0.5, already_split=False):
     """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
 
     Arguments:
