@@ -39,40 +39,22 @@ class ScalingModel(model.Model):
         x_4d = utilities.reshape(x, [-1, num_cols_in, 3, 1], name_suffix='1')
 
         # the first convolution layer preserves the shape and increases the number of channels to 8
-        conv1 = utilities.conv_layer(x_4d, [3, 3, 1, 8], strides=[1, 1, 1, 1], padding='SAME', name_suffix='1')
+        conv1 = utilities.conv_layer(x_4d, [3, 3, 1, 8], padding='SAME', name_suffix='1')
 
         # the first pooling layer simply halves the data size along the SNP dimmension
         pool1 = utilities.pool_layer(conv1, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='1')
 
         # the second convolution layer preserves the shape and increases the number of channels to 16
-        conv2 = utilities.conv_layer(pool1, [3, 3, 8, 16], strides=[1, 1, 1, 1], padding='SAME', name_suffix='2')
+        conv2 = utilities.conv_layer(pool1, [3, 3, 8, 16], padding='SAME', name_suffix='2')
 
         # the second pooling layer halves the data size along the SNP dimmension
         pool2 = utilities.pool_layer(conv2, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='2')
 
-        # the second convolution layer preserves the shape and increases the number of channels to 16
-        conv3 = utilities.conv_layer(pool2, [3, 3, 16, 32], strides=[1, 1, 1, 1], padding='SAME', name_suffix='3')
+        # the third convolution layer reduces reduces the number of states dimmension to size 1 and increases the number of channels to 32
+        conv3 = utilities.conv_layer(pool2, [1, 3, 16, 32], padding='VALID', name_suffix='3')
 
-        # the second pooling layer halves the data size along the SNP dimmension
+        # the third pooling layer halves the data size along the SNP dimmension
         pool3 = utilities.pool_layer(conv3, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='3')
-
-        # # the second convolution layer preserves the shape and increases the number of channels to 16
-        # conv4 = utilities.conv_layer(pool3, [3, 3, 16, 20], strides=[1, 2, 1, 1], padding='SAME', name_suffix='4')
-
-        # # the second pooling layer halves the data size along the SNP dimmension
-        # pool4 = utilities.pool_layer(conv4, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='4')
-
-        # # the second convolution layer preserves the shape and increases the number of channels to 16
-        # conv5 = utilities.conv_layer(pool4, [3, 3, 20, 24], padding='SAME', name_suffix='5')
-
-        # # the second pooling layer halves the data size along the SNP dimmension
-        # pool5 = utilities.pool_layer(conv5, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='5')
-
-        # # the third convolution layer reduces reduces the number of states dimmension to size 1 and increases the number of channels to 32
-        # conv6 = utilities.conv_layer(pool5, [1, 3, 24, 28], padding='VALID', name_suffix='6')
-
-        # # the third pooling layer halves the data size along the SNP dimmension
-        # pool6 = utilities.pool_layer(conv6, shape=[1, 2, 1, 1], strides=[1, 2, 1, 1], name_suffix='6')
 
         # the next layer flattens the data so that it can be passed through a fully connected layer
         final_shape = pool3.get_shape()
@@ -80,24 +62,27 @@ class ScalingModel(model.Model):
         flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
         # the first fully connected layer halves the data size
-        hidden1 = utilities.fc_layer(flatten, flatten_size, 1000, layer_name='hidden_1')
-
-        dropped1, self._keep_prob = utilities.dropout(hidden1, name_suffix='1')
-
-        # the second fully connected layer halves the data size again
-        hidden2 = utilities.fc_layer(dropped1, 1000, 100, layer_name='hidden_2')
+        hidden1_1 = utilities.fc_layer(flatten, flatten_size, 1000, layer_name='hidden_1_1', act=tf.identity)
+        hidden1_2 = utilities.fc_layer(hidden1_1, 1000, int(flatten_size/2), layer_name='hidden_1_2')
 
         # the dropout layer reduces over fitting
-        dropped2, _ = utilities.dropout(hidden2, name_suffix='1', keep_prob=self._keep_prob)
+        dropped1, self._keep_prob = utilities.dropout(hidden1_2, name_suffix='1')
+
+        # the second fully connected layer halves the data size again
+        hidden2_1 = utilities.fc_layer(dropped1, int(flatten_size/2), 1000, layer_name='hidden_2_1', act=tf.identity)
+        hidden2_2 = utilities.fc_layer(hidden2_1, 1000, int(flatten_size/4), layer_name='hidden_2_2')
+
+        dropped2, _ = utilities.dropout(hidden2_2, name_suffix='2', keep_prob=self._keep_prob)
 
         # the network splits here:
         # the first softmax layer reduces the output to a percentage chance for each of the output states
-        output1 = utilities.fc_layer(dropped2, 100, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+        output1 = utilities.fc_layer(dropped2, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
         # the second softmax layer reduces the output to a percentage chance for each SNPs output states
         with tf.name_scope('softmax_2'):
-            fc_layer = utilities.fc_layer(dropped2, 100, num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
-            output2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
+            fc_layer_1 = utilities.fc_layer(dropped2, int(flatten_size/4), 1000, layer_name='identity_1', act=tf.identity)
+            fc_layer_2 = utilities.fc_layer(fc_layer_1, 1000, num_states_out2*num_cols_out2, layer_name='identity_2', act=tf.identity)
+            output2 = tf.nn.softmax(utilities.reshape(fc_layer_2, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
         # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
         self._loss1 = utilities.calculate_cross_entropy(output1, y1_, name_suffix='1')
