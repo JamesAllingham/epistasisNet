@@ -7,3 +7,4 @@ MDR/*
 BEAM/*
 *.json
 .vscode/*
+data/timeline
