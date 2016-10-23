@@ -81,6 +81,8 @@ def train_model(data_holder):
             k = 1.0
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
+    # config = tf.ConfigProto(device_count={'GPU': 0})
+
     with tf.Session() as sess:
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
@@ -127,7 +129,7 @@ def train_model(data_holder):
         if FLAGS.save_model:
             saver.restore(sess, save_path)
 
-        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, 1000))
+        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, FLAGS.test_batch_size))
         epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
         print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
