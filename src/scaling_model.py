@@ -35,6 +35,8 @@ class ScalingModel(model.Model):
         num_cols_out2 = y2_.get_shape().as_list()[1]
         num_states_out2 = y2_.get_shape().as_list()[2]
 
+        self._keep_prob = tf.placeholder(tf.float32)
+
         # first layer reshapes the input to make it 4d as required by the convolution layers
         x_4d = utilities.reshape(x, [-1, num_cols_in, 3, 1], name_suffix='1')
 
@@ -61,27 +63,31 @@ class ScalingModel(model.Model):
         flatten_size = int(final_shape[1]*final_shape[2]*final_shape[3])
         flatten = utilities.reshape(pool3, [-1, flatten_size], name_suffix='2')
 
-        # the first fully connected layer halves the data size
-        hidden1_1 = utilities.fc_layer(flatten, flatten_size, 1000, layer_name='hidden_1_1', act=tf.identity)
-        hidden1_2 = utilities.fc_layer(hidden1_1, 1000, int(flatten_size/2), layer_name='hidden_1_2')
-
-        # the dropout layer reduces over fitting
-        dropped1, self._keep_prob = utilities.dropout(hidden1_2, name_suffix='1')
-
-        # the second fully connected layer halves the data size again
-        hidden2_1 = utilities.fc_layer(dropped1, int(flatten_size/2), 1000, layer_name='hidden_2_1', act=tf.identity)
-        hidden2_2 = utilities.fc_layer(hidden2_1, 1000, int(flatten_size/4), layer_name='hidden_2_2')
-
-        dropped2, _ = utilities.dropout(hidden2_2, name_suffix='2', keep_prob=self._keep_prob)
-
         # the network splits here:
         # the first softmax layer reduces the output to a percentage chance for each of the output states
-        output1 = utilities.fc_layer(dropped2, int(flatten_size/4), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+        hidden1 = utilities.fc_layer(flatten, flatten_size, 100, layer_name='hidden_1')
+        dropped1, _ = utilities.dropout(hidden1, name_suffix='1', keep_prob=self._keep_prob)
+        hiddenx = utilities.fc_layer(dropped1, 100, 10, layer_name='hidden_x')
+        droppedx, _ = utilities.dropout(hiddenx, name_suffix='x', keep_prob=self._keep_prob)
+        output1 = utilities.fc_layer(droppedx, 10, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+
+        # the first fully connected layer halves the data size
+        hidden2_1 = utilities.fc_layer(flatten, flatten_size, 100, layer_name='hidden_2_1', act=tf.identity)
+        hidden2_2 = utilities.fc_layer(hidden2_1, 100, int(flatten_size/2), layer_name='hidden_2_2')
+
+        # the dropout layer reduces over fitting
+        dropped2, _ = utilities.dropout(hidden2_2, name_suffix='2', keep_prob=self._keep_prob)
+
+        # the second fully connected layer halves the data size again
+        hidden3_1 = utilities.fc_layer(dropped2, int(flatten_size/2), 100, layer_name='hidden_3_1', act=tf.identity)
+        hidden3_2 = utilities.fc_layer(hidden3_1, 100, int(flatten_size/4), layer_name='hidden_3_2')
+
+        dropped3, _ = utilities.dropout(hidden3_2, name_suffix='3', keep_prob=self._keep_prob)
 
         # the second softmax layer reduces the output to a percentage chance for each SNPs output states
         with tf.name_scope('softmax_2'):
-            fc_layer_1 = utilities.fc_layer(dropped2, int(flatten_size/4), 1000, layer_name='identity_1', act=tf.identity)
-            fc_layer_2 = utilities.fc_layer(fc_layer_1, 1000, num_states_out2*num_cols_out2, layer_name='identity_2', act=tf.identity)
+            fc_layer_1 = utilities.fc_layer(dropped3, int(flatten_size/4), 100, layer_name='identity_1', act=tf.identity)
+            fc_layer_2 = utilities.fc_layer(fc_layer_1, 100, num_states_out2*num_cols_out2, layer_name='identity_2', act=tf.identity)
             output2 = tf.nn.softmax(utilities.reshape(fc_layer_2, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
         # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
