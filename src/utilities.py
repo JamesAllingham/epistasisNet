@@ -23,7 +23,7 @@ from enum import Enum
 
 
 # # Variable utilities
-def tn_weight_variable(shape, standard_deviation):
+def tn_weight_variable(shape, standard_deviation=0.1):
     """Create a weight matrix with the given shape.
     The weights are initialised with random values taken from a tuncated normal distribution.
 
