@@ -87,7 +87,7 @@ def train_model(data_holder):
     with tf.Session() as sess:
         # Set the random seed so that results will be reproducable.
         tf.set_random_seed(42)
-        
+
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
         saver = tf.train.Saver()
