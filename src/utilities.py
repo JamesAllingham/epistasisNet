@@ -66,7 +66,7 @@ def bias_variable(shape):
 
 # # nn utilities
 
-def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=tf.nn.relu):
+def fc_layer(x, input_dim, output_dim, layer_name='fc_layer', standard_deviation=0.1, act=tf.nn.relu):
     """Reusable code for making a hidden neural net layer.
     It does a matrix multiply, bias add, and then adds a nonlinearity.
     It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
