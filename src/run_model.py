@@ -58,7 +58,7 @@ def train_model(data_holder):
     print("y1_ Shape: %s" % y1_.get_shape())
     print("y2_ Shape: %s" % y2_.get_shape())
 
-    model = pool_conv_model.PoolConvModel(x, y1_, y2_, FLAGS.learning_rate)
+    model = scaling_model.ScalingModel(x, y1_, y2_, FLAGS.learning_rate)
 
     keep_prob = model.get_keep_prob()
     loss1, loss2 = model.get_losses()
@@ -85,6 +85,9 @@ def train_model(data_holder):
     # config = tf.ConfigProto(device_count={'GPU': 0})
 
     with tf.Session() as sess:
+        # Set the random seed so that results will be reproducable.
+        tf.set_random_seed(42)
+        
         # Create a saver this will be used to save the current best model.
         # If the model starts to over fit then it can be restored to the previous best version.
         saver = tf.train.Saver()
@@ -138,7 +141,7 @@ def train_model(data_holder):
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
         print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
         print("Their respective occurrance counts are %s" % epi_snp_counts)
-        
+
         tl = timeline.Timeline(run_metadata.step_stats)
         # print(tl.generate_chrome_trace_format(show_memory=True))
         trace_file = tf.gfile.Open(name='../data/timeline', mode='w')
@@ -153,8 +156,6 @@ def main(args):
     Returns:
         Nothing.
     """
-    # Set the random seed so that results will be reproducable.
-    tf.set_random_seed(42)
 
     # Try get user input.
     if not FLAGS.file_in:
