@@ -65,11 +65,11 @@ class ScalingModel(model.Model):
 
         # the network splits here:
         # the first softmax layer reduces the output to a percentage chance for each of the output states
-        hidden1 = utilities.fc_layer(flatten, flatten_size, 100, layer_name='hidden_1')
+        hidden1 = utilities.fc_layer(flatten, flatten_size, int(flatten_size/100), layer_name='hidden_1')
         dropped1, _ = utilities.dropout(hidden1, name_suffix='1', keep_prob=self._keep_prob)
-        hiddenx = utilities.fc_layer(dropped1, 100, 10, layer_name='hidden_x')
+        hiddenx = utilities.fc_layer(dropped1, int(flatten_size/100), int(flatten_size/200), layer_name='hidden_x')
         droppedx, _ = utilities.dropout(hiddenx, name_suffix='x', keep_prob=self._keep_prob)
-        output1 = utilities.fc_layer(droppedx, 10, num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
+        output1 = utilities.fc_layer(droppedx, int(flatten_size/200), num_states_out1, layer_name='softmax_1', act=tf.nn.softmax)
 
         # the first fully connected layer halves the data size
         hidden2_1 = utilities.fc_layer(flatten, flatten_size, 100, layer_name='hidden_2_1', act=tf.identity)
