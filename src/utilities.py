@@ -23,7 +23,7 @@ from enum import Enum
 
 
 # # Variable utilities
-def tn_weight_variable(shape, standard_deviation):
+def tn_weight_variable(shape, standard_deviation=0.1):
     """Create a weight matrix with the given shape.
     The weights are initialised with random values taken from a tuncated normal distribution.
 
@@ -66,7 +66,7 @@ def bias_variable(shape):
 
 # # nn utilities
 
-def fc_layer(x, input_dim, output_dim, layer_name, standard_deviation=0.1, act=tf.nn.relu):
+def fc_layer(x, input_dim, output_dim, layer_name='fc_layer', standard_deviation=0.1, act=tf.nn.relu):
     """Reusable code for making a hidden neural net layer.
     It does a matrix multiply, bias add, and then adds a nonlinearity.
     It also sets up name scoping so that the resultant graph is easy to read, and adds a number of summary ops.
