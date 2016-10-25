@@ -322,7 +322,7 @@ def calculate_snp_accuracy(y, y_, cut_off_prob=0.5, already_split=False, name_su
         return accuracy
 
 def predict_snps(y, cut_off_prob=0.5, already_split=False):
-    """Predicts which snps are causing epistasis based on one epoch and how many snps to detect
+    """Predicts which snps are causing epistasis based on one epoch and how many snps to detect.
 
     Arguments:
         y: the given output tensor
