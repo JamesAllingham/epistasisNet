@@ -347,7 +347,7 @@ def predict_snps(y, cut_off_prob=0.5, already_split=False):
         return top_pred_snps, count
 
 def get_snp_headers(snp_labels, headers):
-    """Python funtion to find the header names for the snp labels
+    """non-tensorflow funtion to find the header names for the snp labels
 
     Arguments:
         snp_labels: a numpy array with the snp labels to find
