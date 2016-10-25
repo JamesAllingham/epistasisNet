@@ -4,6 +4,7 @@ These tests are not meant to retest the Tensorflow functionality, they are only 
 """
 
 import sys
+import unittest
 
 import numpy as np
 import tensorflow as tf
@@ -457,7 +458,7 @@ class CalculateEpiAccuracyTest(tf.test.TestCase):
         output_accuracy = utilities.calculate_epi_accuracy(input_tensor, input_labels)
         with self.test_session() as sess:
             sess.run(tf.initialize_all_variables())
-            self.assertEqual(0.25, sess.run(output_accuracy))
+            self.assertAlmostEqual(0.25, sess.run(output_accuracy))
 
 class CalculateSnpAccuracyTest(tf.test.TestCase):
     """Tests for the calculate_epi_accuracy function
@@ -563,61 +564,58 @@ class PredictSnpsTest(tf.test.TestCase):
             sess.run(tf.initialize_all_variables())
             self.assertAllEqual(np.array([1, 2]), sess.run(count))
 
-# class CorrectlyCalculateAccuracyForATwoClassifier(tf.test.TestCase):
-#     """Provides a test for checking that the function calculate_snp_accuracy() is able to return a correct accuracy check for a double classifier model
+class GetOutputSnpHeadersTest(unittest.TestCase):
+    """Provides a test for checking that the correct snp headers are returned from the snp numbers
 
-#     Inherits from the tf.test.TestCase class.
-#     """
-#     def runTest(self):
-#         """Asserts that accuracy is summed and meaned over the data
+    Inherits from the unittest.TestCase class.
+    """
+    def testHeaderRetrieving(self):
+        """Asserts that the function get_snp_headers correctly fetches header names for the snps
 
-#         Arguments:
-#             Nothing.
+        Arguments:
+            Nothing.
 
-#         Returns:
-#             Nothing.
-#         """
-#         with self.test_session() as sess:
-#             input_tensor = tf.constant([[[0.5, 0.8], [0.2, 0.8], [0.9, 0.1]], [0.2, 0.8], [0.49, 0.8], [0.51, 0.49]])
-#             labels = tf.constant([[[0, 1], [0, 1], [1, 0]], [[0, 1], [0, 1], [1, 0]]])
-#             self.assertEqual(utilities.calculate_snp_accuracy(input_tensor, labels), 1)
+        Returns:
+            Nothing.
+        """
+        headers = np.array(['MP01', 'N0', 'N1', 'MP02', 'MP03'])
+        snp_indices = np.array([0, 3, 4])
+        self.assertTrue(np.array_equal(utilities.get_snp_headers(snp_indices, headers), np.array(['MP01', 'MP02', 'MP03'])))
 
-# class CorrectlyCalculateAccuracyForASingleClassifier(tf.test.TestCase):
-#     """Provides a test for checking that the function calculate_snp_accuracy() is able to return a correct accuracy check for a single classifier model
+class GetCausingEpiProbsTest(tf.test.TestCase):
+    """Tests for the get_causing_epi() function
 
-#     Inherits from the tf.test.TestCase class.
-#     """
-#     def runTest(self):
-#         """Asserts that accuracy is correctly summed and meaned over the predicted snp data
+    Inherits from the tf.test.TestCase class.
+    """
 
-#         Arguments:
-#             Nothing.
+    def testGetEpiShape(self):
+        """Provides a test for checking that the function get_causing_epi() is able to return correct output shape
+        Arguments:
+            Nothing.
 
-#         Returns:
-#             Nothing.
-#         """
-#         with self.test_session() as sess:
-#             input_tensor = tf.constant([[[0.99], [0.2], [0.99]], [[0.2], [0.49], [0.99]]])
-#             labels = tf.constant([[[0, 1], [0, 1], [1, 0]], [[0, 1], [0, 1], [1, 0]]])
-#             self.assertEqual(utilities.calculate_snp_accuracy(input_tensor, labels, cut_off_prob=0.98), 0.75)
+        Returns:
+            Nothing.
+        """
+        input_tensor = tf.constant([[[0.5, 0.8], [0.2, 0.8], [0.9, 0.1]], [[0.2, 0.8], [0.49, 0.8], [0.51, 0.49]]])
+        output_tensor = utilities.get_causing_epi_probs(input_tensor)
+        output_tensor_shape = tf.shape(output_tensor)
+        with self.test_session() as sess:
+            sess.run(tf.initialize_all_variables())
+            self.assertAllEqual(np.array([2, 3, 1]), sess.run(output_tensor_shape))
 
-# class GetOutputSnpHeaders(unittest.TestCase):
-#     """Provides a test for checking that the correct snp headers are returned from the snp numbers
+    def testGetEpiOutputValues(self):
+        """Provides a test for checking that the function get_causing_epi() is able to return correct output values
+        Arguments:
+            Nothing.
 
-#     Inherits from the unittest.TestCase class.
-#     """
-#     def runTest(self):
-#         """Asserts that the function get_snp_headers correctly fetches header names for the snps
-
-#         Arguments:
-#             Nothing.
-
-#         Returns:
-#             Nothing.
-#         """
-#         headers = np.array(['N0', 'N1', 'MP01', 'MP02', 'MP03'])
-#         snp_indices = np.array([2, 3, 4])
-#         self.assertTrue(np.array_equal(utilities.get_snp_headers(snp_indices, headers), np.array(['MP01', 'MP02', 'MP03'])))
+        Returns:
+            Nothing.
+        """
+        input_tensor = tf.constant([[[0.5, 0.8], [0.2, 0.8], [0.9, 0.1]], [[0.2, 0.8], [0.49, 0.8], [0.51, 0.49]]])
+        output_tensor = utilities.get_causing_epi_probs(input_tensor)
+        with self.test_session() as sess:
+            sess.run(tf.initialize_all_variables())
+            self.assertAllClose(np.array([[[0.5], [0.2], [0.9]], [[0.2], [0.49], [0.51]]]), sess.run(output_tensor))
 
 if __name__ == '__main__':
     tf.test.main()
