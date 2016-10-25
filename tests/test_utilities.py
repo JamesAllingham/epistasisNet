@@ -437,8 +437,68 @@ class CalculateCrossEntropyTest(tf.test.TestCase):
             op_dict = {"cross_entropy_1/add": "Add", "cross_entropy_1/Log": "Log", "cross_entropy_1/mul": "Mul", "cross_entropy_1/total/Mean": "Mean", "cross_entropy_1/total/Neg": "Neg"}
             tf.python.framework.test_util.assert_ops_in_graph(op_dict, tf.get_default_graph())
 
+class CalculateEpiAccuracyTest(tf.test.TestCase):
+    """Tests for the calculate_epi_accuracy function
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def testEpiAccuracyOutput(self):
+        """Provides a test for checking that the function predict_snps() is able to find the snps predicted for a double classifier
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        input_tensor = tf.Variable([[1, 0], [0.9, 0.1], [0.8, 0.2], [0.6, 0.4]], dtype=tf.float32)
+        input_labels = tf.constant([[1, 0], [0, 1], [0, 1], [0, 1]], dtype=tf.float32)
+        output_accuracy = utilities.calculate_epi_accuracy(input_tensor, input_labels)
+        with self.test_session() as sess:
+            sess.run(tf.initialize_all_variables())
+            self.assertEqual(0.25, sess.run(output_accuracy))
+
+class CalculateSnpAccuracyTest(tf.test.TestCase):
+    """Tests for the calculate_epi_accuracy function
+
+    Inherits from the tf.test.TestCase class.
+    """
+
+    def testSnpAccuracyOutputForTwoClassifier(self):
+        """Provides a test for checking that the function calculate_snp_accuracy() is able to run accuracy check correctly for a double classifier
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        input_tensor = tf.Variable([[[1, 0], [0.9, 0.1], [0.8, 0.2], [0.6, 0.4]], [[1, 0], [0.9, 0.1], [0.8, 0.2], [0.6, 0.4]]], dtype=tf.float32)
+        input_labels = tf.constant([[[1, 0], [0, 1], [0, 1], [0, 1]], [[1, 0], [0, 1], [0, 1], [0, 1]]], dtype=tf.float32)
+        output_accuracy = utilities.calculate_snp_accuracy(input_tensor, input_labels)
+        with self.test_session() as sess:
+            sess.run(tf.initialize_all_variables())
+            self.assertAlmostEqual(0.25, sess.run(output_accuracy))
+
+    def testSnpAccuracyOutputForOneClassifier(self):
+        """Provides a test for checking that the function calculate_snp_accuracy() is able to run accuracy check correctly for a single classifier
+
+        Arguments:
+            Nothing.
+
+        Returns:
+            Nothing.
+        """
+        input_tensor = tf.Variable([[[1], [0.9], [0.8], [0.6]], [[1], [0.9], [0.8], [0.6]]], dtype=tf.float32)
+        input_labels = tf.constant([[[1, 0], [0, 1], [0, 1], [0, 1]], [[1, 0], [0, 1], [0, 1], [1, 0]]], dtype=tf.float32)
+        output_accuracy = utilities.calculate_snp_accuracy(input_tensor, input_labels, cut_off_prob=0.9, already_split=True)
+        with self.test_session() as sess:
+            sess.run(tf.initialize_all_variables())
+            self.assertAlmostEqual(0.4, sess.run(output_accuracy))
+
 class PredictSnpsTest(tf.test.TestCase):
-    """Tests for the predict_snps funtion
+    """Tests for the predict_snps function
 
     Inherits from the tf.test.TestCase class.
     """
