@@ -12,6 +12,11 @@ class ScalingModel(model.Model):
 
     The network structure is as follows:
 
+     input --> reshape --> conv --> pool --> conv --> pool --> conv --> pool --> reshape --> hidden --> dropout --> hidden --> dropout --> softmax
+                                                                                         --> hidden --> dropout --> hidden --> dropout --> softmax
+    [?, x, 3] --> [?, x, 3, 1] --> [?, x, 3, 8] --> [?, x/2, 3, 8] --> [?, x/2, 3, 16] --> [?, x/4, 3, 16] --> [?, x/4, 1, 32] --> [?, x/8, 1, 32] --> [?, 4x, 1] --> [?, 2x, 1] --> [?, 2x, 1] --> [?, x, 1] --> [?, x, 1] --> [?, 2, 1]
+                                                                                                                                                                  --> [?, x/50, 1] --> [?, x/50, 1] --> [?, x/100, 1] --> [?, x/100, 1] --> [?, 2, x]
+
     """
 
     def __init__(self, x, y1_, y2_, learning_rate):

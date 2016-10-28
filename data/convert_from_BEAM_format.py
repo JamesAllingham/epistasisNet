@@ -38,7 +38,7 @@ def main(args):
 
     # Read the input data into an np array
     try:
-        input_data = np.genfromtxt(input_file_name_and_path, dtype='intc', skip_header=1)
+        input_data = np.genfromtxt(input_file_name_and_path, dtype='intc')
     except IOError:
         print('Unable to read the input file.')
         print('Script usage:')
@@ -46,32 +46,11 @@ def main(args):
         sys.exit(2)
 
     # Rotate the data so that the last collumn is the first row
-    rotated = np.rot90(input_data)
-
-    # num_rows, num_cols = rotated.shape
-    # 
-    # result = np.zeros((num_rows, num_cols*2))
-    # 
-    # # For the case control row every collumn is duplicated
-    # for j in range(num_cols):
-    #     result[0, 2*j] = rotated[0, j]
-    #     result[0, 2*j+1] = rotated[0, j]
-
-    # # For the other rows:
-    # # 2 -> 1,1; 1 -> 1,0; 0 -> 0,0
-    # for i in xrange(1, num_rows):
-    #     for j in range(num_cols):
-    #         if rotated[i, j] == 1:
-    #             result[i, 2*j] = 1
-    #         elif rotated[i, j] == 2:
-    #             result[i, 2*j+1] = 1
-    #             result[i, 2*j] = 1
-    #         elif rotated[i, j] != 0:
-    #             print('An allele value other than 0, 1, or 2 is invalid.')
-    #             sys.exit(2)
+    rotated = np.rot90(input_data, 3)
+    header = " ".join([str(elem) for elem in range(np.shape(rotated)[1])])
 
     try:
-        np.savetxt(output_file_name_and_path, rotated, fmt='%i', delimiter=' ')
+        np.savetxt(output_file_name_and_path, rotated, fmt='%i', delimiter=' ', header=header, comments='')
     except IOError as excep:
         print(excep)
         print('Unable to write the output file.')
