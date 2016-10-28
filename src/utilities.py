@@ -86,15 +86,15 @@ def fc_layer(x, input_dim, output_dim, layer_name='fc_layer', standard_deviation
         # This Variable will hold the state of the weights for the layer
         with tf.name_scope('weights'):
             weights = tn_weight_variable([input_dim, output_dim], standard_deviation)
-            variable_summaries(weights, layer_name + '/weights')
+            # variable_summaries(weights, layer_name + '/weights')
         with tf.name_scope('biases'):
             biases = bias_variable([output_dim])
-            variable_summaries(biases, layer_name + '/biases')
+            # variable_summaries(biases, layer_name + '/biases')
         with tf.name_scope('Wx_plus_b'):
             preactivate = tf.matmul(x, weights) + biases
-            tf.histogram_summary(layer_name + '/pre_activations', preactivate)
+            # tf.histogram_summary(layer_name + '/pre_activations', preactivate)
         activations = act(preactivate, name='activation')
-        tf.histogram_summary(layer_name + '/activations', activations)
+        # tf.histogram_summary(layer_name + '/activations', activations)
         print("%s shape: %s" % (layer_name, activations.get_shape()))
         return activations
 
@@ -134,12 +134,12 @@ def conv_layer(x, shape, strides=[1, 1, 1, 1], standard_deviation=0.1, padding='
     with tf.variable_scope(layer_name) as scope:
         with tf.name_scope('kernel'):
             kernel = tn_weight_variable(shape, standard_deviation)
-            variable_summaries(kernel, layer_name + '/kernel')
+            # variable_summaries(kernel, layer_name + '/kernel')
         with tf.name_scope('convolution'):
             preactivate = tf.nn.conv2d(x, kernel, strides, padding=padding)
-            tf.histogram_summary(layer_name + '/preactivate', preactivate)
+            # tf.histogram_summary(layer_name + '/preactivate', preactivate)
         activations = act(preactivate, 'activation')
-        tf.histogram_summary(layer_name + '/activations', activations)
+        # tf.histogram_summary(layer_name + '/activations', activations)
         print("%s shape: %s" % (layer_name, activations.get_shape()))
         return activations
 
@@ -386,10 +386,10 @@ def variable_summaries(var, name):
     """
     with tf.name_scope('summaries'):
         mean = tf.reduce_mean(var)
-        tf.scalar_summary('mean/' + name, mean)
+        # tf.scalar_summary('mean/' + name, mean)
         with tf.name_scope('stddev'):
             stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
-        tf.scalar_summary('sttdev/' + name, stddev)
-        tf.scalar_summary('max/' + name, tf.reduce_max(var))
-        tf.scalar_summary('min/' + name, tf.reduce_min(var))
-        tf.histogram_summary(name, var)
+        # tf.scalar_summary('sttdev/' + name, stddev)
+        # tf.scalar_summary('max/' + name, tf.reduce_max(var))
+        # tf.scalar_summary('min/' + name, tf.reduce_min(var))
+        # tf.histogram_summary(name, var)
