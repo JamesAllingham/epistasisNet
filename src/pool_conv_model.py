@@ -80,13 +80,14 @@ class PoolConvModel(model.Model):
 
         # the second softmax layer reduces the output to a percentage chance for each SNPs output states
         with tf.name_scope('softmax_2'):
-            fc_layer = utilities.fc_layer(dropped, int(flatten_size/4), num_cols_out2, layer_name='identity', act=tf.identity)
-            output2 = tf.sigmoid(utilities.reshape(fc_layer, [-1, num_cols_out2, 1], name_suffix='3'))
-            print('output2 %s' % output2.get_shape())
+            fc_layer = utilities.fc_layer(dropped, int(flatten_size/4), num_states_out2*num_cols_out2, layer_name='identity', act=tf.identity)
+            #output2 = tf.sigmoid(utilities.reshape(fc_layer, [-1, num_cols_out2, 1], name_suffix='3'))
+            output2 = tf.nn.softmax(utilities.reshape(fc_layer, [-1, num_cols_out2, num_states_out2], name_suffix='3'))
 
         # each of the loss layers compares the probability distributions between the correspinding outputs to get an error metric for the network's outputs
         self._loss1 = utilities.calculate_cross_entropy(output1, y1_, name_suffix='1')
-        self._loss2 = utilities.calculate_cross_entropy(output2, utilities.get_causing_epi_probs(y2_), name_suffix='2')
+        #self._loss2 = utilities.calculate_cross_entropy(output2, utilities.get_causing_epi_probs(y2_), name_suffix='2')
+        self._loss2 = utilities.calculate_cross_entropy(output2, y2_, name_suffix='2')
         # these losses are compined into one for the training
         with tf.name_scope('combined_loss'):
             combined_loss = tf.add(self._loss1, self._loss2)
@@ -96,10 +97,10 @@ class PoolConvModel(model.Model):
 
         # the accuracies for each output are calculated by comparing them to the correct outputs
         self._accuracy1 = utilities.calculate_epi_accuracy(output1, y1_, name_suffix='1')
-        self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, cut_off_prob=0.98, already_split=True, name_suffix='2')
+        self._accuracy2 = utilities.calculate_snp_accuracy(output2, y2_, name_suffix='2')
 
         # find the top predicted snps
-        self._epi_snps, self._count = utilities.predict_snps(output2, cut_off_prob=0.98, already_split=True)
+        self._epi_snps, self._count = utilities.predict_snps(output2)
 
         # merge all the summaries
         self._merged = tf.merge_all_summaries()
