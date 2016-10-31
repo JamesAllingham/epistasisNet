@@ -83,7 +83,7 @@ def train_model(data_holder):
         return {x: xs, y1_: y1s, y2_: y2s, keep_prob: k}
 
     # config = tf.ConfigProto(device_count={'GPU': 0})
-
+    best_iter = 0
     with tf.Session() as sess:
         # Set the random seed so that results will be reproducable.
         tf.set_random_seed(42)
@@ -114,6 +114,7 @@ def train_model(data_holder):
                     best_cost = cost1 + cost2
                     save_path = saver.save(sess, FLAGS.model_dir + 'model')
                     print("saving model at iteration %i" % i)
+                    best_iter = i
 
             else:  # Record train set summaries, and train
                 if i % 100 == 99:  # Record execution stats
@@ -132,6 +133,7 @@ def train_model(data_holder):
         test_writer.close()
 
         if FLAGS.save_model:
+            print("Restoring model from iteration: %s" % best_iter)
             saver.restore(sess, save_path)
 
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
