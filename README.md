@@ -33,7 +33,7 @@ Flag | Default Value | Description
 -model_dir| /tmp/tf_models/| Directory for storing the saved models
 -write_binary| True| Write the processed numpy array to a binary file
 -read_binary| True| Read a binary file rather than a text file
--save_model| True| Save the best model asa the training progresses
+-save_model| True| Save the best model as the training progresses
 
 EpistasisNet expects input text files to be in the format provided by [GAMETES](https://sourceforge.net/projects/gametes/). Note that the text files can be written to binary files by specifying the write_binary flag to be True. 
 
