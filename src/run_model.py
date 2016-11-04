@@ -98,7 +98,7 @@ def train_model(data_holder):
         sess.run(tf.initialize_all_variables())
         save_path = ''
 
-        best_cost = float('inf')
+        best_acc = 0
         for i in range(FLAGS.max_steps):
 
             if i % 10 == 0:  # Record summaries and test-set accuracy
@@ -110,8 +110,8 @@ def train_model(data_holder):
                 print('Cost at step %s for output 2: %f' % (i, cost2))
 
                 # save the model every time a new best accuracy is reached
-                if cost1 + cost2 <= best_cost and FLAGS.save_model:
-                    best_cost = cost1 + cost2
+                if acc1 + acc2 >= best_acc and FLAGS.save_model:
+                    best_cost = acc1 + acc2
                     save_path = saver.save(sess, FLAGS.model_dir + 'model')
                     print("saving model at iteration %i" % i)
                     best_iter = i
@@ -138,7 +138,7 @@ def train_model(data_holder):
 
         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, FLAGS.test_batch_size), options=run_options, run_metadata=run_metadata)
+        best_acc1, best_acc2, epi_snp_locations, epi_snp_counts = sess.run([accuracy1, accuracy2, epi_snps, count], feed_dict=feed_dict(False, None), options=run_options, run_metadata=run_metadata)
         epi_snp_names = utilities.get_snp_headers(epi_snp_locations, data_holder.get_header_data())
         print("The best accuracies were %s and %s" % (best_acc1, best_acc2))
         print("The SNPs predicted to cause epistasis are %s" % epi_snp_names)
