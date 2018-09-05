@@ -46,7 +46,7 @@ Directory | File | Description
 data | convert_from_BEAM_format.py | Converts data in the format used by the BEAM tool to the GAMETES format
      | convert_to_BEAM_format.py | Converts data in the GAMETES format to the BEAM format
 docs | style_guide.html | Google's Python style guide
-     | MeetingMinutes/*.pdf | Minutes for various meetings held during the course of the projects
+     | MeetingMinutes/\*.pdf | Minutes for various meetings held during the course of the projects
 src | GPU_off.sh | A shell script that turns off GPU usage for EpistasisNet (as well as other CUDA applications)
     | GPU_on.sh | A shell script that turns on GPU usage for EpistasisNet (as well as other CUDA applications)
     | convolutional_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
