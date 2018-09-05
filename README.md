@@ -44,24 +44,24 @@ The files for EpistasisNet are:
 Directory | File | Description
 ---|---|---
 data | convert_from_BEAM_format.py | Converts data in the format used by the BEAM tool to the GAMETES format
-     | convert_to_BEAM_format.py | Converts data in the GAMETES format to the BEAM format
+data | convert_to_BEAM_format.py | Converts data in the GAMETES format to the BEAM format
 docs | style_guide.html | Google's Python style guide
-     | MeetingMinutes/\*.pdf | Minutes for various meetings held during the course of the projects
+docs | MeetingMinutes/\*.pdf | Minutes for various meetings held during the course of the projects
 src | GPU_off.sh | A shell script that turns off GPU usage for EpistasisNet (as well as other CUDA applications)
-    | GPU_on.sh | A shell script that turns on GPU usage for EpistasisNet (as well as other CUDA applications)
-    | convolutional_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
-    | data_batcher.py | Module that provides a single class: DataLoader, which manages reading of raw data and formatting is appropriately
-    | data_holder.py | Module that provides a single class: DataHolder, which manages reading of input files and storage of various data sets
-    | data_loader.py | Module that provides a single class: DataLoader, which manages reading of raw data and formatting appropriately
-    | linear_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
-    | model.py | Module that supplies a Model class which can be inherited from when creating models representing TensorFlow graphs
-    | nonlinear_model.py | Module that supplies a fully connected model with nonlinearities to test for epistasis on a GAMETES dataset
-    | pool_conv_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
-    | recurrent_model.py | Module that supplies a recurrent model with additional fully connected layers to test for epistasis on a GAMETES dataset
-    | run_model.py | Module that trains a TensorFlow model
-    | scaling_model | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset - *Best Model*
-    | utilities.py | Module that provides a number of wrapper functions for TensorFlow
+src | GPU_on.sh | A shell script that turns on GPU usage for EpistasisNet (as well as other CUDA applications)
+src | convolutional_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
+src | data_batcher.py | Module that provides a single class: DataLoader, which manages reading of raw data and formatting is appropriately
+src | data_holder.py | Module that provides a single class: DataHolder, which manages reading of input files and storage of various data sets
+src | data_loader.py | Module that provides a single class: DataLoader, which manages reading of raw data and formatting appropriately
+src | linear_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
+src | model.py | Module that supplies a Model class which can be inherited from when creating models representing TensorFlow graphs
+src | nonlinear_model.py | Module that supplies a fully connected model with nonlinearities to test for epistasis on a GAMETES dataset
+src | pool_conv_model.py | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset
+src | recurrent_model.py | Module that supplies a recurrent model with additional fully connected layers to test for epistasis on a GAMETES dataset
+src | run_model.py | Module that trains a TensorFlow model
+src | scaling_model | Module that supplies a convolutional model with pooling to test for epistasis on a GAMETES dataset - *Best Model*
+src | utilities.py | Module that provides a number of wrapper functions for TensorFlow
 tests | test_data_batcher.py | Module that provides test cases for the DataBatcher class
-      | test_data_holder.py | Module that provides test cases for the DataHolder class
-      | test_data_loader.py | Module that provides test cases for the DataLoader class
-      | test_utilities.py | Module provides test cases for the utilities functions for building Tensorflow graphs
+tests | test_data_holder.py | Module that provides test cases for the DataHolder class
+tests | test_data_loader.py | Module that provides test cases for the DataLoader class
+tests | test_utilities.py | Module provides test cases for the utilities functions for building Tensorflow graphs
